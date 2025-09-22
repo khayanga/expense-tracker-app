@@ -135,31 +135,33 @@ export async function deleteTransaction(req, res) {
   }
 }
 
+
+
 export async function getSummary(req, res) {
   try {
     const { userId } = req.params;
 
-    // total balance
+    
     const balanceAgg = await db.transactions.aggregate({
       _sum: { amount: true },
       where: { user_id: userId },
     });
 
-    // income (amount > 0)
+    
     const incomeAgg = await db.transactions.aggregate({
       _sum: { amount: true },
-      where: { user_id: userId, amount: { gt: 0 } },
+      where: { user_id: userId, category: "Income" },
     });
 
-    // expenses (amount < 0)
+    
     const expensesAgg = await db.transactions.aggregate({
       _sum: { amount: true },
-      where: { user_id: userId, amount: { lt: 0 } },
+      where: { user_id: userId, category: "Expenses" },
     });
 
-    const balance = balanceAgg._sum.amount || 0;
-    const income = incomeAgg._sum.amount || 0;
-    const expenses = Math.abs(expensesAgg._sum.amount || 0);
+    const balance = balanceAgg._sum.amount ? balanceAgg._sum.amount.toNumber() : 0;
+    const income = incomeAgg._sum.amount ? incomeAgg._sum.amount.toNumber() : 0;
+    const expenses = expensesAgg._sum.amount ? expensesAgg._sum.amount.toNumber() : 0;
 
     res.status(200).json({
       message: "Transaction summary fetched successfully",
