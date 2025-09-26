@@ -1,14 +1,42 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { Tabs } from 'expo-router'
-
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons"; 
 const TabLayout = () => {
   return (
-   <Tabs>
-    <Tabs.Screen name="index" options={{headerShown:false, title:"Home"}} />
-    <Tabs.Screen name="settings" options={{headerShown:false, title:"Settings"}} />
-   </Tabs>
-  )
-}
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: "#2E7D32", 
+        tabBarInactiveTintColor: "#9E9E9E", 
+        tabBarStyle: {
+          backgroundColor: "#fff",
+          borderTopWidth: 1,
+          borderTopColor: "#e5e5e5",
+          height: 60,
+          paddingBottom: 5,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
 
-export default TabLayout
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+};
+
+export default TabLayout;
