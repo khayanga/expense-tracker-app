@@ -5,6 +5,7 @@ const settings = () => {
   return (
     <View className='flex-1 items-center justify-center bg-white'>
       <Text>settings</Text>
+      
     </View>
   )
 }

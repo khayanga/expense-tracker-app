@@ -9,7 +9,6 @@ module.exports = {
   theme: {
     extend: {
        colors: {
-        // Coffee
         coffee: {
           primary: "#8B593E",
           background: "#FFF8F3",
