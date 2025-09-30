@@ -1,112 +1,129 @@
-import * as React from 'react'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { useSignUp } from '@clerk/clerk-expo'
-import { Link, useRouter } from 'expo-router'
+import * as React from "react";
+import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { useSignUp } from "@clerk/clerk-expo";
+import { Link, useRouter } from "expo-router";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp()
-  const router = useRouter()
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const router = useRouter();
+  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const [passwordError, setPasswordError] = React.useState<string | null>(null);
 
-  const [emailAddress, setEmailAddress] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const [pendingVerification, setPendingVerification] = React.useState(false)
-  const [code, setCode] = React.useState('')
+  const [emailAddress, setEmailAddress] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [pendingVerification, setPendingVerification] = React.useState(false);
+  const [code, setCode] = React.useState("");
 
-  // Handle submission of sign-up form
   const onSignUpPress = async () => {
-    if (!isLoaded) return
+    let valid = true;
 
-    // Start sign-up process using email and password provided
+    if (!emailAddress.includes("@")) {
+      setEmailError("Please enter a valid email");
+      valid = false;
+    } else {
+      setEmailError("");
+    }
+
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      valid = false;
+    } else {
+      setPasswordError("");
+    }
+
+    if (!valid || !isLoaded) return;
+
     try {
       await signUp.create({
         emailAddress,
         password,
-      })
+      });
 
-      // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
 
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
-      setPendingVerification(true)
+      setPendingVerification(true);
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      console.error(JSON.stringify(err, null, 2));
+      Alert.alert("Error", "Failed to sign up. Please try again.");
     }
-  }
+  };
 
-  // Handle submission of verification form
   const onVerifyPress = async () => {
-    if (!isLoaded) return
+    if (!isLoaded) return;
 
     try {
-      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code,
-      })
+      });
 
-      // If verification was completed, set the session to active
-      // and redirect the user
-      if (signUpAttempt.status === 'complete') {
-        await setActive({ session: signUpAttempt.createdSessionId })
-        router.replace('/')
+      if (signUpAttempt.status === "complete") {
+        await setActive({ session: signUpAttempt.createdSessionId });
+        router.replace("/");
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2))
+        console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      console.error(JSON.stringify(err, null, 2));
     }
-  }
+  };
 
   if (pendingVerification) {
     return (
-      <>
-        <Text>Verify your email</Text>
-        <TextInput
+      <View className="flex-1 justify-center items-center gap-4  bg-white px-8">
+        <Text className="text-coffee-primary font-bold text-2xl">
+          Verify your email
+        </Text>
+        <Input
           value={code}
           placeholder="Enter your verification code"
           onChangeText={(code) => setCode(code)}
         />
-        <TouchableOpacity onPress={onVerifyPress}>
-          <Text>Verify</Text>
-        </TouchableOpacity>
-      </>
-    )
+
+        <Button text="Verify" onPress={onVerifyPress} />
+      </View>
+    );
   }
 
   return (
-    <View className='flex-1 justify-center items-center gap-4 px-4'>
-      <>
-        <Text>Sign up</Text>
-        <TextInput
-          autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Enter email"
-          className='border border-coffee-primary w-full pb-2'
-          onChangeText={(email) => setEmailAddress(email)}
-        />
-        <TextInput
-          value={password}
-          placeholder="Enter password"
-          secureTextEntry={true}
-          className='border border-coffee-primary w-full pb-2'
-          onChangeText={(password) => setPassword(password)}
-        />
-        <TouchableOpacity onPress={onSignUpPress} className='bg-coffee-primary  rounded-xl py-3 px-12'>
-          <Text className='text-coffee-white'>Continue</Text>
-        </TouchableOpacity>
-        <View style={{ display: 'flex', flexDirection: 'row', gap: 3 }}>
-          <Text>Already have an account?</Text>
-          <Link href="/sign-in">
-            <Text>Sign in</Text>
-          </Link>
-        </View>
-      </>
+    <View className="flex-1 justify-center items-center gap-4 bg-white px-8">
+      <Image
+        source={require("../../assets/images/revenue-i1.png")}
+        alt="signup image"
+        className="w-64 h-64 mb-4"
+        resizeMode="contain"
+      />
+
+      <Text className="text-2xl font-bold text-coffee-primary tracking-wider">
+        Create Account
+      </Text>
+
+      <Input
+        label="Email Address"
+        value={emailAddress}
+        placeholder="Enter email"
+        onChangeText={(email) => setEmailAddress(email)}
+        error={emailError || undefined}
+      />
+
+      <Input
+        label="Password"
+        value={password}
+        onChangeText={(password) => setPassword(password)}
+        placeholder="Enter password"
+        secureTextEntry
+        error={passwordError || undefined}
+      />
+
+      <Button text="Sign up" onPress={onSignUpPress} />
+
+      <View className="flex-row gap-2">
+        <Text className="text-lg">Already have an account? </Text>
+        <Link href="/sign-in">
+          <Text className="text-coffee-primary text-lg">Sign in</Text>
+        </Link>
+      </View>
     </View>
-  )
+  );
 }
