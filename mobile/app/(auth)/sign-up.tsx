@@ -4,6 +4,7 @@ import { useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -44,9 +45,14 @@ export default function SignUpScreen() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
 
       setPendingVerification(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
-      Alert.alert("Error", "Failed to sign up. Please try again.");
+
+      if (err.errors && err.errors.length > 0) {
+        Alert.alert("Error", err.errors[0].message);
+      } else {
+        Alert.alert("Error", "Something went wrong. Please try again.");
+      }
     }
   };
 
@@ -60,7 +66,7 @@ export default function SignUpScreen() {
 
       if (signUpAttempt.status === "complete") {
         await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace("/");
+        router.replace("/(tabs)");
       } else {
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }
@@ -72,7 +78,13 @@ export default function SignUpScreen() {
   if (pendingVerification) {
     return (
       <View className="flex-1 justify-center items-center gap-4  bg-white px-8">
-        <Text className="text-coffee-primary font-bold text-2xl">
+        <Image
+          source={require("../../assets/images/revenue-i3.png")}
+          alt="verify image"
+          className="w-64 h-64 mb-4"
+          resizeMode="contain"
+        />
+        <Text className="text-coffee-primary font-bold text-[32px]">
           Verify your email
         </Text>
         <Input
@@ -87,43 +99,50 @@ export default function SignUpScreen() {
   }
 
   return (
-    <View className="flex-1 justify-center items-center gap-4 bg-white px-8">
-      <Image
-        source={require("../../assets/images/revenue-i1.png")}
-        alt="signup image"
-        className="w-64 h-64 mb-4"
-        resizeMode="contain"
-      />
+    <KeyboardAwareScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      enableOnAndroid={true}
+      extraScrollHeight={20}
+      enableAutomaticScroll={true}
+    >
+      <View className="flex-1 justify-center items-center gap-4 bg-white px-8">
+        <Image
+          source={require("../../assets/images/revenue-i4.png")}
+          alt="signup image"
+          className="w-64 h-64 mb-4"
+          resizeMode="contain"
+        />
 
-      <Text className="text-2xl font-bold text-coffee-primary tracking-wider">
-        Create Account
-      </Text>
+        <Text className="text-[32px] font-bold text-coffee-primary tracking-wider">
+          Let&apos;s get you started!
+        </Text>
 
-      <Input
-        label="Email Address"
-        value={emailAddress}
-        placeholder="Enter email"
-        onChangeText={(email) => setEmailAddress(email)}
-        error={emailError || undefined}
-      />
+        <Input
+          label="Email Address"
+          value={emailAddress}
+          placeholder="Enter email"
+          onChangeText={(email) => setEmailAddress(email)}
+          error={emailError || undefined}
+        />
 
-      <Input
-        label="Password"
-        value={password}
-        onChangeText={(password) => setPassword(password)}
-        placeholder="Enter password"
-        secureTextEntry
-        error={passwordError || undefined}
-      />
+        <Input
+          label="Password"
+          value={password}
+          onChangeText={(password) => setPassword(password)}
+          placeholder="Enter password"
+          secureTextEntry
+          error={passwordError || undefined}
+        />
 
-      <Button text="Sign up" onPress={onSignUpPress} />
+        <Button text="Sign up" onPress={onSignUpPress} />
 
-      <View className="flex-row gap-2">
-        <Text className="text-lg">Already have an account? </Text>
-        <Link href="/sign-in">
-          <Text className="text-coffee-primary text-lg">Sign in</Text>
-        </Link>
+        <View className="flex-row gap-2">
+          <Text className="text-lg">Already have an account? </Text>
+          <Link href="/sign-in">
+            <Text className="text-coffee-primary text-lg">Sign in</Text>
+          </Link>
+        </View>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }

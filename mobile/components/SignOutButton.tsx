@@ -9,14 +9,14 @@ export const SignOutButton = () => {
     try {
       await signOut()
       
-      Linking.openURL(Linking.createURL('/'))
+      Linking.openURL(Linking.createURL('/(auth)/sign-in'))
     } catch (err) {
       console.error(JSON.stringify(err, null, 2))
     }
   }
   return (
-    <TouchableOpacity onPress={handleSignOut}>
-      <Text>Sign out</Text>
+    <TouchableOpacity className='bg-coffee-primary p-2 rounded-lg' onPress={handleSignOut}>
+      <Text className='text-coffee-background'>Sign out</Text>
     </TouchableOpacity>
   )
 }
