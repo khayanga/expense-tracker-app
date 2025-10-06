@@ -63,7 +63,7 @@ export default function Page() {
       extraScrollHeight={20}
       enableAutomaticScroll={true}
     >
-      <View className="flex-1 justify-center items-center gap-4 px-6 bg-white">
+      <View className="flex-1 justify-center items-center gap-4 px-6 bg-coffee-background">
         <Image
           source={require("../../assets/images/revenue-i2.png")}
           alt="sigin image"

@@ -77,7 +77,7 @@ export default function SignUpScreen() {
 
   if (pendingVerification) {
     return (
-      <View className="flex-1 justify-center items-center gap-4  bg-white px-8">
+      <View className="flex-1 justify-center items-center gap-4  bg-coffee-background px-8">
         <Image
           source={require("../../assets/images/revenue-i3.png")}
           alt="verify image"
@@ -105,7 +105,7 @@ export default function SignUpScreen() {
       extraScrollHeight={20}
       enableAutomaticScroll={true}
     >
-      <View className="flex-1 justify-center items-center gap-4 bg-white px-8">
+      <View className="flex-1 justify-center items-center gap-4 bg-coffee-background px-8">
         <Image
           source={require("../../assets/images/revenue-i4.png")}
           alt="signup image"

@@ -4,12 +4,13 @@ import { createTransaction, deleteTransaction, getSummary, getTransactionById, g
 
 const router = express.Router();
 
-router.post("/", createTransaction)
-router.get("/", getTransactions)
-router.get("/:user_id", getTransactionsByUserId)
-router.get("/:id", getTransactionById)
-router.patch("/:id", updateTransaction)
-router.delete("/:id", deleteTransaction)
-router.get("/summary/:user_id", getSummary)
+router.post("/", createTransaction);
+router.get("/", getTransactions);
+router.get("/user/:user_id", getTransactionsByUserId);
+router.get("/id/:id", getTransactionById);
+router.patch("/id/:id", updateTransaction);
+router.delete("/id/:id", deleteTransaction);
+router.get("/summary/:user_id", getSummary);
+
 
 export default router;
