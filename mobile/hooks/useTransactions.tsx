@@ -1,8 +1,8 @@
 import { Transaction } from "@/types/transaction";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
-const API_URL="http://192.168.100.40:5000/api"
-// const API_URL = "http://192.168.0.104:5000/api";
+// const API_URL="http://192.168.100.40:5000/api"
+const API_URL = "http://192.168.10.4:5000/api";
 
 
 

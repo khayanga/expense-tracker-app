@@ -22,25 +22,25 @@ const CATEGORY_ICONS = {
 } as const; 
 
 const TransactionList: React.FC<TransactionListProps> = ({ item, onDelete }) => {
-  const isIncome = parseFloat(String(item.amount)) > 0;
+  const isIncome = item.title === "Income";
   const iconName = CATEGORY_ICONS[item.category] || "pricetag-outline";
 
   return (
-    <View className="bg-coffee-white rounded-[12px] mb-8 flex-row items-center justify-between">
+    <View className="bg-coffee-white rounded-[14px] mb-8 flex-row items-center justify-between">
       <TouchableOpacity className="flex-row items-center flex-1">
         <View className="bg-coffee-background p-3 rounded-full m-4">
           <Ionicons
             name={iconName}
             size={22}
-            color={isIncome ? "#7D6A58" : "#E74C3C"}
+            color={ "#7D6A58" }
           />
         </View>
 
         <View className="flex-1 pr-2">
-          <Text className="text-[16px] text-coffee-text font-bold text-lg">
-            {item.title}
+          <Text className="text-[16px] text-gray-700 font-bold text-lg">
+            {item.category}
           </Text>
-          <Text className="text-md text-coffee-textLight">{item.category}</Text>
+          <Text className="text-md text-gray-500">{item.title}</Text>
         </View>
 
         <View className="items-end pr-4">
@@ -51,7 +51,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ item, onDelete }) => 
           >
             {isIncome ? `+ $${item.amount}` : `- $${Math.abs(item.amount)}`}
           </Text>
-          <Text className="text-coffee-text"> {formatDate(item.created_at ?? "")}</Text>
+          <Text className="text-gray-700"> {formatDate(item.created_at ?? "")}</Text>
         </View>
       </TouchableOpacity>
 

@@ -6,7 +6,7 @@ const TabLayout = () => {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#6F4E37", 
-        tabBarShowLabel:false,
+        tabBarShowLabel:true,
         tabBarInactiveTintColor: "#9E9E9E", 
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
@@ -36,6 +36,7 @@ const TabLayout = () => {
           ),
         }}
       />
+       
     </Tabs>
   );
 };

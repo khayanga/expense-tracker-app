@@ -11,8 +11,10 @@ export async function createTransaction(req, res) {
       });
     }
 
+    const normalizedAmount = category === "Expenses" ? -Math.abs(amount) : Math.abs(amount);
+
     const transaction = await db.transactions.create({
-      data: { user_id, amount, category, title },
+      data: { user_id, amount:normalizedAmount, category, title },
     });
 
     res.status(201).json({
@@ -153,12 +155,12 @@ export async function getSummary(req, res) {
 
     const incomeAgg = await db.transactions.aggregate({
       _sum: { amount: true },
-      where: { user_id: userId, category: "Income" },
+      where: { user_id: userId, title: "Income" },
     });
 
     const expensesAgg = await db.transactions.aggregate({
       _sum: { amount: true },
-      where: { user_id: userId, category: "Expenses" },
+      where: { user_id: userId, title: "Expenses" },
     });
 
     const balance = balanceAgg._sum.amount ?? 0;
