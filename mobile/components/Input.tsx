@@ -8,13 +8,15 @@ export default function Input({
   placeholder,
   secureTextEntry,
   error,
+  keyBoardType ="default",
 }: {
   label?: string;
-  value: string;
+  value: string ;
   onChangeText: (text: string) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
   error?: string;
+  keyBoardType?: "default" | "numeric" | "email-address" | "phone-pad";
 }) {
   return (
     <View className="w-full mb-2">
@@ -28,6 +30,7 @@ export default function Input({
         onChangeText={onChangeText}
         placeholder={placeholder}
         secureTextEntry={secureTextEntry}
+        keyboardType={keyBoardType}
         className={`border w-full p-4 bg-white rounded-md text-md 
           ${error ? "border-red-500" : "border-coffee-border"}`}
       />

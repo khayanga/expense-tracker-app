@@ -5,7 +5,7 @@ export type TransactionCategory =
   | "Transportation"
   | "Entertainment"
   | "Bills"
-  | "Income"
+  | "Salary"
   | "Other";
 
 export type Transaction = {

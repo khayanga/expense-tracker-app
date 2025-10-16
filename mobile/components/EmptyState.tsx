@@ -11,7 +11,7 @@ const EmptyState = () => {
         <Text className='text-gray-800 text-lg'>No transactions found.</Text>
         <Text className='text-gray-600 text-sm'>Add your first transaction to get started!</Text>
         <TouchableOpacity className='mt-4 justify-center items-center border-coffee-primary'
-        onPress={()=>router.push('/create')}>
+        onPress={()=>router.push('/transactions/create')}>
             <Ionicons name='add-circle' size={50} color="#8B593E" />
             <Text className='text-coffee-primary text-md mt-2 font-bold'> Add Transaction</Text>
         </TouchableOpacity>

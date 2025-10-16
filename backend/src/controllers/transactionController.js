@@ -11,7 +11,7 @@ export async function createTransaction(req, res) {
       });
     }
 
-    const normalizedAmount = category === "Expenses" ? -Math.abs(amount) : Math.abs(amount);
+    const normalizedAmount = title === "Expenses" ? -Math.abs(amount) : Math.abs(amount);
 
     const transaction = await db.transactions.create({
       data: { user_id, amount:normalizedAmount, category, title },
@@ -147,30 +147,60 @@ export async function deleteTransaction(req, res) {
 export async function getSummary(req, res) {
   try {
     const { userId } = req.params;
-
-    const balanceAgg = await db.transactions.aggregate({
-      _sum: { amount: true },
+    const transactions = await db.transactions.findMany({
       where: { user_id: userId },
     });
 
-    const incomeAgg = await db.transactions.aggregate({
-      _sum: { amount: true },
-      where: { user_id: userId, title: "Income" },
-    });
 
-    const expensesAgg = await db.transactions.aggregate({
-      _sum: { amount: true },
-      where: { user_id: userId, title: "Expenses" },
-    });
+    // const balanceAgg = await db.transactions.aggregate({
+    //   _sum: { amount: true },
+    //   where: { user_id: userId },
+    // });
 
-    const balance = balanceAgg._sum.amount ?? 0;
-    const income = incomeAgg._sum.amount ?? 0;
-    const expenses = expensesAgg._sum.amount ?? 0;
+    // const incomeAgg = await db.transactions.aggregate({
+    //   _sum: { amount: true },
+    //   where: { user_id: userId, title: "Income" },
+    // });
+
+    // const expensesAgg = await db.transactions.aggregate({
+    //   _sum: { amount: true },
+    //   where: { user_id: userId, title: "Expenses" },
+    // });
+    
+    // const income = incomeAgg._sum.amount ?? 0;
+    // const expenses = expensesAgg._sum.amount ?? 0;
+    // const balance= income - expenses
+    const income = transactions
+      .filter((t) => t.title === "Income")
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    const expenses = transactions
+      .filter((t) => t.title === "Expenses")
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    
+    const balance = income - expenses;
+
+    // res.status(200).json({
+    //   success: true,
+    //   message: "Transaction summary fetched successfully",
+    //   data: { balance, income, expenses },
+    // });
+        const formatKES = (value) =>
+      new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: "KES",
+        minimumFractionDigits: 2,
+      }).format(value);
 
     res.status(200).json({
       success: true,
       message: "Transaction summary fetched successfully",
-      data: { balance, income, expenses },
+      data: {
+        income: formatKES(income),
+        expenses: `-${formatKES(expenses)}`,
+        balance: formatKES(balance),
+      },
     });
   } catch (error) {
     console.error("Error getting the summary:", error);
