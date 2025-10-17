@@ -2,17 +2,38 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model transactions {
-  id         Int       @id @default(autoincrement())
-  user_id    String    @db.VarChar(255)
-  amount     Decimal   @db.Decimal(10, 2)
-  category   String    @db.VarChar(255)
-  title      String    @db.VarChar(255)
-  created_at DateTime? @default(dbgenerated("CURRENT_DATE")) @db.Date
+enum TransactionType {
+  income
+  expense
+  allocation
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  user_id     String          @db.VarChar(255)
+  amount      Decimal         @db.Decimal(10, 2)
+  category    String          @db.VarChar(255)
+  title       String          @db.VarChar(255)
+  type        TransactionType @default(expense)
+  parent_id   Int?
+  created_at  DateTime?       @default(dbgenerated("CURRENT_DATE")) @db.Date
+  parent      Transaction?    @relation("TransactionToAllocation", fields: [parent_id], references: [id])
+  allocations Transaction[]   @relation("TransactionToAllocation")
+
+  @@index([user_id])
+}
+
+model UserRatio {
+  id              Int       @id @default(autoincrement())
+  user_id         String    @unique @db.VarChar(255)
+  needs_percent   Int
+  wants_percent   Int
+  savings_percent Int
+  created_at      DateTime? @default(dbgenerated("CURRENT_DATE")) @db.Date
+  updated_at      DateTime  @updatedAt
 }

@@ -1,5 +1,6 @@
 import express from 'express';
 import transactionRoute from './routes/transactionRoute.js';
+import ratioRoute from "./routes/ratioRoute.js"
 import dotenv from 'dotenv';
 import rateLimiter from '../middleware/rateLimiter.js';
 
@@ -13,6 +14,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 5000;
 
 app.use("/api/transactions", transactionRoute);
+app.use("/api/ratio",ratioRoute),
 
 
 app.get("/", (res)=>{

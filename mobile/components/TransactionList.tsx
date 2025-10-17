@@ -28,7 +28,7 @@ const formatCurrency = (amount: number) => {
 };
 
 const TransactionList: React.FC<TransactionListProps> = ({ item, onDelete }) => {
-  const isIncome = item.title === "Income";
+  const isIncome = item.type === "income";
   const iconName = CATEGORY_ICONS[item.category] || "pricetag-outline";
   const displayAmount = isIncome ? item.amount : -Math.abs(item.amount);
 
@@ -41,9 +41,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ item, onDelete }) => 
 
         <View className="flex-1 pr-2">
           <Text className="text-[16px] text-gray-700 font-bold text-lg">
-            {item.category}
+            {item.title}
           </Text>
-          <Text className="text-md text-gray-500">{item.title}</Text>
+          <Text className="text-md text-gray-500">{item.category}</Text>
         </View>
 
         <View className="items-end pr-4">

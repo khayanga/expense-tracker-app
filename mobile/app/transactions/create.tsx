@@ -26,17 +26,19 @@ const CreateTransaction = () => {
   const { createTransaction, loading } = useTransactions(user_id);
 
   const [title, setTitle] = React.useState("");
+  const [type,setType] = React.useState("")
   const [amount, setAmount] = React.useState("");
   const [category, setCategory] = React.useState<TransactionCategory | "">("");
 
   const handleSubmit = async () => {
-    if (!title || !amount || !category) {
+    if (!title || !amount || !category ||!type) {
       Alert.alert("Please fill all the fields");
       return;
     }
 
     await createTransaction({
       title,
+      type,
       amount: parseFloat(amount),
       category,
       user_id,
@@ -47,21 +49,29 @@ const CreateTransaction = () => {
 
   return (
     <View className="flex-1 bg-coffee-background">
-      <View className="p-4">
+      <View className="p-4 flex-row justify-between">
         <TouchableOpacity onPress={() => router.push("/")}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text className="text-gray-900 text-[22px]">Create transaction</Text>
+        <Text className="text-gray-900 text-[18px]">New transaction</Text>
       </View>
 
       <View className="p-4">
+        <Text className="text-gray-900 text-lg mb-2">Type</Text>
         <Picker
-          selectedValue={title}
-          onValueChange={(value) => setTitle(value)}
+          selectedValue={type}
+          onValueChange={(value) => setType(value)}
         >
-          <Picker.Item label="Income" value="Income" />
-          <Picker.Item label="Expenses" value="Expenses" />
+          <Picker.Item label="Income" value="income" />
+          <Picker.Item label="Expenses" value="expense" />
         </Picker>
+
+        <Input
+        value={title}
+        onChangeText={setTitle}
+        label="Title"
+        placeholder="lunch"
+        />
 
         <Input
           value={amount}

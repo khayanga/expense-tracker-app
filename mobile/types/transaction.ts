@@ -12,6 +12,7 @@ export type Transaction = {
   id: number;
   title: string;
   amount: number;
+  type:string;
   category: TransactionCategory;
   user_id: string;
   created_at?: string;

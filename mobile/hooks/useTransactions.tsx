@@ -74,7 +74,7 @@ export const useTransactions = (user_id: string) => {
 
   const createTransaction = useCallback(
     async (transaction: Omit<Transaction, "id">) => {
-      if (!transaction.title || !transaction.amount || !transaction.category) {
+      if (!transaction.title || !transaction.amount || !transaction.category ||!transaction.type) {
         Alert.alert("Error", "Please fill in all fields");
         return;
       }
