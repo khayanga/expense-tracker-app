@@ -5,6 +5,7 @@ const API_URL = "http://192.168.100.40:5000/api";
 
 export const useTransactions = (user_id: string) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+ 
   const [summary, setSummary] = useState({
     income: 0,
     balance: 0,
@@ -41,6 +42,7 @@ export const useTransactions = (user_id: string) => {
     }
   }, [user_id]);
 
+ 
   const loadData = useCallback(async () => {
     if (!user_id) return;
     setLoading(true);
@@ -106,5 +108,6 @@ export const useTransactions = (user_id: string) => {
     loadData,
     deleteTransaction,
     createTransaction,
+    
   };
 };

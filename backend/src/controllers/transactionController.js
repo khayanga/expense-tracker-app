@@ -1,10 +1,10 @@
 import db from "../lib/prisma.js";
 
 export async function createTransaction(req, res) {
-  const { user_id, amount, category, title ,type} = req.body;
+  const { user_id, amount, category, title, type } = req.body;
 
   try {
-    if (!user_id || !amount || !category || !title ||!type) {
+    if (!user_id || !amount || !category || !title || !type) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -15,8 +15,45 @@ export async function createTransaction(req, res) {
       title === "expense" ? -Math.abs(amount) : Math.abs(amount);
 
     const transaction = await db.transaction.create({
-      data: { user_id, amount: normalizedAmount, category, title ,type},
+      data: { user_id, amount: normalizedAmount, category, title, type },
     });
+
+    if (type === "income") {
+      const ratio = await db.userRatio.findUnique({
+        where: { user_id },
+      });
+
+      if (ratio) {
+        const allocations = [
+          {
+            user_id,
+            amount: (amount * ratio.needs_percent) / 100,
+            category: "Needs",
+            title: "Needs Allocation",
+            type: "allocation",
+            parent_id: transaction.id,
+          },
+          {
+            user_id,
+            amount: (amount * ratio.wants_percent) / 100,
+            category: "Wants",
+            title: "Wants Allocation",
+            type: "allocation",
+            parent_id: transaction.id,
+          },
+          {
+            user_id,
+            amount: (amount * ratio.savings_percent) / 100,
+            category: "Savings",
+            title: "Savings Allocation",
+            type: "allocation",
+            parent_id: transaction.id,
+          },
+        ];
+
+        await db.transaction.createMany({ data: allocations });
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -43,6 +80,8 @@ export async function getTransactions(req, res) {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
+
+
 
 export async function getTransactionById(req, res) {
   const { id } = req.params;
@@ -71,7 +110,12 @@ export async function getTransactionsByUserId(req, res) {
   const { user_id } = req.params;
   try {
     const transactions = await db.transaction.findMany({
-      where: { user_id },
+      where: { 
+        user_id,
+        parent_id:null 
+
+      },
+      
     });
 
     res.status(200).json({
@@ -85,9 +129,36 @@ export async function getTransactionsByUserId(req, res) {
   }
 }
 
+
+export async function getAlloctionsByTransactionId(req,res) {
+
+  const {id} =req.params;
+
+  try {
+    const allocations = await db.transaction.findMany({
+      where:{
+        parent_id:Number(id)
+      },
+    })
+
+    res.status(201).json({
+      success:true,
+      data:allocations
+    })
+    
+  } catch (error) {
+    console.error("Error fetching allocations", error)
+    res.status(500).json({
+      success:false,
+      message:"Failed to fetch allocations"
+    })
+  }
+  
+}
+
 export async function updateTransaction(req, res) {
   const { id } = req.params;
-  const { amount, category, title,type } = req.body;
+  const { amount, category, title, type } = req.body;
   try {
     const existingTransaction = await db.transaction.findUnique({
       where: { id: Number(id) },
@@ -101,7 +172,7 @@ export async function updateTransaction(req, res) {
 
     const updatedTransaction = await db.transaction.update({
       where: { id: Number(id) },
-      data: { amount, category, title ,type},
+      data: { amount, category, title, type },
     });
 
     res.status(200).json({

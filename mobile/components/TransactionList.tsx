@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { formatDate } from "../lib/utils";
 import { Transaction } from "@/types/transaction";
+import { router } from "expo-router";
 
 type TransactionListProps = {
   item: Transaction;
@@ -27,14 +28,28 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-const TransactionList: React.FC<TransactionListProps> = ({ item, onDelete }) => {
+const TransactionList: React.FC<TransactionListProps> = ({
+  item,
+  onDelete,
+}) => {
   const isIncome = item.type === "income";
   const iconName = CATEGORY_ICONS[item.category] || "pricetag-outline";
   const displayAmount = isIncome ? item.amount : -Math.abs(item.amount);
+  const handlePress = () => {
+    if (isIncome) {
+      router.push({
+        pathname: "/transactions/[id]",
+        params: { id: Number(item.id) },
+      });
+    }
+  };
 
   return (
     <View className="bg-coffee-white rounded-[14px] mb-4 flex-row items-center justify-between shadow-sm">
-      <TouchableOpacity className="flex-row items-center flex-1">
+      <TouchableOpacity
+        className="flex-row items-center flex-1"
+        onPress={handlePress}
+      >
         <View className="bg-coffee-background p-3 rounded-full m-4">
           <Ionicons name={iconName} size={22} color={"#7D6A58"} />
         </View>
@@ -60,9 +75,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ item, onDelete }) => 
         </View>
       </TouchableOpacity>
 
+      <View>
+        
+      </View>
+
       <TouchableOpacity className="p-4" onPress={() => onDelete(item.id)}>
         <Ionicons name="trash" size={20} color="#E74C3C" />
       </TouchableOpacity>
+      
     </View>
   );
 };

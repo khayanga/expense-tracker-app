@@ -57,22 +57,20 @@ export async function createRatio(req, res) {
 
 export async function updateRatio(req, res) {
   const { user_id } = req.params;
-
-  const { needsPercent, savingsPercent, wantsPercent } = req.body;
+  const { needsPercent, savingsPercent, wantsPercent, transactionId } = req.body;
 
   try {
-    const existingRatio = await db.userRatio.findUnique({
-      where: { user_id },
-    });
-
+    
+    const existingRatio = await db.userRatio.findUnique({ where: { user_id } });
     if (!existingRatio) {
       return res.status(400).json({
         success: false,
         message: "User ratio does not exist",
       });
     }
-    const total =
-      (needsPercent ?? 0) + (wantsPercent ?? 0) + (savingsPercent ?? 0);
+
+    
+    const total = (needsPercent ?? 0) + (wantsPercent ?? 0) + (savingsPercent ?? 0);
     if (total !== 100) {
       return res.status(400).json({
         success: false,
@@ -80,8 +78,9 @@ export async function updateRatio(req, res) {
       });
     }
 
+    
     const updatedRatio = await db.userRatio.update({
-      where: { user_id},
+      where: { user_id },
       data: {
         needs_percent: needsPercent,
         wants_percent: wantsPercent,
@@ -89,19 +88,77 @@ export async function updateRatio(req, res) {
       },
     });
 
+    
+    const tx = await db.transaction.findUnique({
+      where: { id: Number(transactionId) },
+    });
+
+    if (!tx || tx.type !== "income") {
+      return res.status(400).json({
+        success: false,
+        message: "Transaction not found or not income type",
+      });
+    }
+
+    
+    await db.transaction.deleteMany({
+      where: {
+        parent_id: tx.id,
+        type: "allocation",
+      },
+    });
+
+    
+    const allocations = [
+      {
+        user_id,
+        amount: Number(((tx.amount * needsPercent) / 100).toFixed(2)),
+        category: "Needs",
+        title: "Needs Allocation",
+        type: "allocation",
+        parent_id: tx.id,
+      },
+      {
+        user_id,
+        amount: Number(((tx.amount * wantsPercent) / 100).toFixed(2)),
+        category: "Wants",
+        title: "Wants Allocation",
+        type: "allocation",
+        parent_id: tx.id,
+      },
+      {
+        user_id,
+        amount: Number(((tx.amount * savingsPercent) / 100).toFixed(2)),
+        category: "Savings",
+        title: "Savings Allocation",
+        type: "allocation",
+        parent_id: tx.id,
+      },
+    ];
+
+    await db.transaction.createMany({ data: allocations });
+
+    const newAllocations = await db.transaction.findMany({
+      where: { parent_id: tx.id, type: "allocation" },
+    });
+
     res.status(201).json({
-        success:true,
-        message:'Ratio updated succesfully',
-        data:updatedRatio
-    })
+      success: true,
+      message: "Ratio and allocations updated successfully",
+      data: {
+        updatedRatio,
+        newAllocations,
+      },
+    });
   } catch (error) {
-    console.error("Error updating the ratio",error)
+    console.error("Error updating the ratio", error);
     res.status(500).json({
-        success:false,
-        message:"Could not update ratio"
-    })
+      success: false,
+      message: "Could not update ratio",
+    });
   }
 }
+
 
 
 export async function fetchRatioById(req,res) {
@@ -119,7 +176,7 @@ export async function fetchRatioById(req,res) {
             })
         }
 
-        res.status(201).json({
+        res.status(200).json({
             success:true,
             message:"Ratio fetched succesfully",
             data:ratio,
