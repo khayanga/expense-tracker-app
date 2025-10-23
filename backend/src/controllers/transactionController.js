@@ -67,6 +67,7 @@ export async function createTransaction(req, res) {
 }
 
 export async function getTransactions(req, res) {
+  
   try {
     const transactions = await db.transaction.findMany();
 
@@ -112,8 +113,12 @@ export async function getTransactionsByUserId(req, res) {
     const transactions = await db.transaction.findMany({
       where: { 
         user_id,
-        parent_id:null 
+        parent_id:null ,
+        type: { in: ["income", "expense"] },
 
+      },
+      orderBy: {
+        created_at: 'desc'
       },
       
     });
@@ -218,9 +223,9 @@ export async function deleteTransaction(req, res) {
 
 export async function getSummary(req, res) {
   try {
-    const { userId } = req.params;
+    const { user_id } = req.params;
     const transactions = await db.transaction.findMany({
-      where: { user_id: userId },
+      where: { user_id },
     });
     const income = transactions
       .filter((t) => t.type === "income")

@@ -16,7 +16,7 @@ export const UserRatioCard: React.FC<Props> = ({ ratio }) => {
   return (
     <View className="bg-white p-4 rounded-2xl shadow-sm mb-4">
       <Text className="text-lg font-bold text-gray-700 mb-3">
-        User Ratio Used
+        Income Allocation Ratio
       </Text>
 
       {bars.map((bar, idx) => (

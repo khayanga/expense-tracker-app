@@ -1,12 +1,21 @@
-import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
-import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+} from "react-native";
+import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useTransactions } from "@/hooks/useTransactions";
 import { TransactionCategory } from "@/types/transaction";
 import Input from "@/components/Input";
-import { Picker } from "@react-native-picker/picker";
+import Toast from "react-native-toast-message";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const categoryOptions: TransactionCategory[] = [
   "Food & Drinks",
@@ -18,6 +27,19 @@ const categoryOptions: TransactionCategory[] = [
   "Other",
 ];
 
+const categoryIcons: Record<
+  TransactionCategory,
+  React.ComponentProps<typeof Ionicons>["name"]
+> = {
+  "Food & Drinks": "fast-food",
+  Shopping: "cart",
+  Transportation: "car",
+  Entertainment: "film",
+  Bills: "receipt",
+  Salary: "cash",
+  Other: "ellipsis-horizontal",
+};
+
 const CreateTransaction = () => {
   const router = useRouter();
   const { user } = useUser();
@@ -25,14 +47,14 @@ const CreateTransaction = () => {
 
   const { createTransaction, loading } = useTransactions(user_id);
 
-  const [title, setTitle] = React.useState("");
-  const [type,setType] = React.useState("")
-  const [amount, setAmount] = React.useState("");
-  const [category, setCategory] = React.useState<TransactionCategory | "">("");
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState<"income" | "expense" | "">("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState<TransactionCategory | "">("");
 
   const handleSubmit = async () => {
-    if (!title || !amount || !category ||!type) {
-      Alert.alert("Please fill all the fields");
+    if (!title || !amount || !category || !type) {
+      Alert.alert("Missing Info", "Please fill all the fields before saving.");
       return;
     }
 
@@ -44,68 +66,155 @@ const CreateTransaction = () => {
       user_id,
     });
 
-    router.back();
+    Toast.show({
+      type: "success",
+      text1: "Transaction Saved ✅",
+      position: "bottom",
+    });
+
+    setTimeout(() => {
+      if (router.canGoBack()) router.back();
+      else router.push("/");
+    }, 1000);
   };
 
   return (
-    <View className="flex-1 bg-coffee-background">
-      <View className="p-4 flex-row justify-between">
-        <TouchableOpacity onPress={() => router.push("/")}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text className="text-gray-900 text-[18px]">New transaction</Text>
-      </View>
-
-      <View className="p-4">
-        <Text className="text-gray-900 text-lg mb-2">Type</Text>
-        <Picker
-          selectedValue={type}
-          onValueChange={(value) => setType(value)}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View className="flex-1 bg-coffee-white">
+        <KeyboardAwareScrollView
+          enableOnAndroid
+          extraScrollHeight={20}
+          enableAutomaticScroll
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 12,
+            paddingBottom: 100, 
+          }}
         >
-          <Picker.Item label="Income" value="income" />
-          <Picker.Item label="Expenses" value="expense" />
-        </Picker>
+          
+          <View className="p-2 flex-row items-center">
+            <TouchableOpacity
+              onPress={() =>
+                router.canGoBack() ? router.back() : router.push("/")
+              }
+            >
+              <Ionicons name="arrow-back" size={24} color="#4B2E05" />
+            </TouchableOpacity>
+            <Text className="flex-1 text-center text-xl font-bold text-coffee-primary">
+              Add Transaction
+            </Text>
+          </View>
 
-        <Input
-        value={title}
-        onChangeText={setTitle}
-        label="Title"
-        placeholder="lunch"
-        />
+          {/* Type Selection */}
+          <View className="rounded-2xl p-2 mb-5">
+            <Text className="text-coffee-text text-lg font-semibold mb-3">
+              Select Type
+            </Text>
+            <View className="flex-row justify-between bg-coffee-card elevation-sm rounded-2xl py-4 px-2">
+              {[
+                { label: "Income", value: "income", icon: "trending-up" },
+                { label: "Expense", value: "expense", icon: "trending-down" },
+              ].map((t) => {
+                const isActive = type === t.value;
+                return (
+                  <TouchableOpacity
+                    key={t.value}
+                    onPress={() => setType(t.value as "income" | "expense")}
+                    className={`flex-1 mx-1 py-3 rounded-xl border flex-row justify-center items-center gap-2 ${
+                      isActive
+                        ? "bg-[#8B5E3C] border-[#8B5E3C]"
+                        : "bg-white/20 border-[#E6C9A8]"
+                    }`}
+                  >
+                    <Ionicons
+                      name={t.icon as any}
+                      size={18}
+                      color={isActive ? "white" : "#8B5E3C"}
+                    />
+                    <Text
+                      className={`text-base font-semibold ${
+                        isActive ? "text-white" : "text-[#8B5E3C]"
+                      }`}
+                    >
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
-        <Input
-          value={amount}
-          onChangeText={setAmount}
-          label="Amount"
-          keyBoardType="numeric"
-          placeholder="1000"
-        />
+          {/* Categories */}
+          <View className="bg-coffee-card rounded-2xl p-2 mb-5">
+            <Text className="text-coffee-text text-lg font-semibold mb-3">
+              Select Category
+            </Text>
+            <View className="flex-row flex-wrap gap-3 mb-6">
+              {categoryOptions.map((cat) => {
+                const isSelected = category === cat;
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    onPress={() => setCategory(cat)}
+                    className={`flex-row items-center px-3 py-2 rounded-full border ${
+                      isSelected
+                        ? "bg-coffee-primary border-[#C19A6B]"
+                        : "border-[#E6C9A8] bg-white/10"
+                    }`}
+                  >
+                    <Ionicons
+                      name={categoryIcons[cat]}
+                      size={16}
+                      color={isSelected ? "#fff" : "#8B5E3C"}
+                    />
+                    <Text
+                      className={`ml-2 text-sm ${
+                        isSelected ? "text-white" : "text-[#8B5E3C]"
+                      }`}
+                    >
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
-        {categoryOptions.map((cat) => (
+          {/* Inputs */}
+          <View className="p-2 mb-5">
+            <Input
+              label="Title"
+              placeholder="e.g. Lunch with friends"
+              value={title}
+              onChangeText={setTitle}
+            />
+            <Input
+              label="Amount"
+              placeholder="e.g. 1200"
+              value={amount}
+              onChangeText={setAmount}
+              keyBoardType="numeric"
+            />
+          </View>
+
           <TouchableOpacity
-            key={cat}
-            onPress={() => setCategory(cat)}
-            className={`p-3 rounded-lg mb-2 ${
-              category === cat ? "bg-blue-500" : "bg-white"
-            }`}
+            disabled={loading}
+            onPress={handleSubmit}
+            className="bg-[#8B5E3C] py-4 rounded-2xl shadow-md"
           >
-            <Text className={category === cat ? "text-white" : "text-black"}>
-              {cat}
+            <Text className="text-white text-center text-lg font-semibold">
+              {loading ? "Saving..." : "Save Transaction"}
             </Text>
           </TouchableOpacity>
-        ))}
+          
 
-        <TouchableOpacity
-          onPress={handleSubmit}
-          className="bg-green-500 p-4 rounded-lg mt-4"
-          disabled={loading}
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            {loading ? "Saving..." : "Save Transaction"}
-          </Text>
-        </TouchableOpacity>
+        <Toast />
+        </KeyboardAwareScrollView>
+
+        
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 

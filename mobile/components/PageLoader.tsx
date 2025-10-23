@@ -4,7 +4,7 @@ import React from 'react'
 
 const PageLoader = () => {
   return (
-    <View className='flex-1 justify-center items-center  '>
+    <View className='flex-1 justify-center items-center bg-coffee-background  '>
       <ActivityIndicator size="large" color="#8B593E" />
     </View>
   )

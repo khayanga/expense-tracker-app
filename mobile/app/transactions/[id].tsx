@@ -27,8 +27,8 @@ export default function TransactionAllocationsScreen() {
   const [wantsPercent, setWantsPercent] = useState("");
   const [savingsPercent, setSavingsPercent] = useState("");
 
-  const { ratio, updateRatio, loading } = useRatio(user_id);
-  const { allocations ,fetchAllocations} = useAllocations(Number(id));
+  const { ratio, updateRatio, createRatio, loading } = useRatio(user_id);
+  const { allocations, fetchAllocations } = useAllocations(Number(id));
 
   useEffect(() => {
     if (ratio) {
@@ -38,20 +38,24 @@ export default function TransactionAllocationsScreen() {
     }
   }, [ratio]);
 
-  const handleUpdate = async () => {
+  const handleSave = async () => {
     if (!needsPercent || !wantsPercent || !savingsPercent) {
       Alert.alert("Error", "Please fill in all percentage fields");
       return;
     }
 
-    const updatedRatio = {
+    const payload = {
       needs_percent: Number(needsPercent),
       wants_percent: Number(wantsPercent),
       savings_percent: Number(savingsPercent),
       transactionId: Number(id),
     };
 
-    await updateRatio(updatedRatio);
+    if (ratio === null) {
+      await createRatio(payload);
+    } else {
+      await updateRatio(payload);
+    }
 
     await fetchAllocations();
   };
@@ -81,6 +85,12 @@ export default function TransactionAllocationsScreen() {
         <Text className="text-2xl font-bold text-center mb-4 text-coffee-text">
           Allocations
         </Text>
+
+        {!ratio && (
+          <Text className="text-center text-gray-500 mb-2">
+            You don’t have a ratio yet — create one below to get started.
+          </Text>
+        )}
 
         <Text className="text-base mb-2 text-coffee-text font-medium">
           User ratio used:
@@ -126,11 +136,11 @@ export default function TransactionAllocationsScreen() {
           </Text>
 
           <TouchableOpacity
-            onPress={handleUpdate}
+            onPress={handleSave}
             className="bg-coffee-primary p-4 rounded-lg mt-4"
           >
             <Text className="text-white text-center text-lg font-semibold">
-              Update Ratio
+              {ratio ? "Update Ratio" : "Create Ratio"}
             </Text>
           </TouchableOpacity>
         </View>

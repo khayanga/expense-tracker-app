@@ -91,7 +91,7 @@ export const useTransactions = (user_id: string) => {
         if (!data.success)
           throw new Error(data.message || "Failed to create transaction");
         await loadData();
-        Alert.alert("Success", "Transaction created successfully");
+        
       } catch (err) {
         console.error("Error creating transaction:", err);
         Alert.alert("Error", "Failed to create transaction");
