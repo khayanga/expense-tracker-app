@@ -90,6 +90,8 @@ export const useTransactions = (user_id: string) => {
         const data = await response.json();
         if (!data.success)
           throw new Error(data.message || "Failed to create transaction");
+
+        setTransactions((prev) => [...prev, data.data]);
         await loadData();
         
       } catch (err) {

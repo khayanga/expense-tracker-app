@@ -8,11 +8,11 @@ export default function Index() {
   return (
     <View className="flex-1 bg-coffee-background">
       
-      <View className="z-10  bg-coffee-background shadow-md">
+      <View className="z-10  bg-coffee-background shadow-md px-4">
         <Header />
       </View>
 
-      {/* Scrollable Content */}
+     
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}

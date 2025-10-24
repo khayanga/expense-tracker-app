@@ -5,17 +5,16 @@ import {
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
-  Platform,
 } from "react-native";
 import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import { useTransactions } from "@/hooks/useTransactions";
 import { TransactionCategory } from "@/types/transaction";
 import Input from "@/components/Input";
 import Toast from "react-native-toast-message";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useTransactionContext } from "@/context/TransactionContext";
 
 const categoryOptions: TransactionCategory[] = [
   "Food & Drinks",
@@ -45,7 +44,7 @@ const CreateTransaction = () => {
   const { user } = useUser();
   const user_id = user?.id || "";
 
-  const { createTransaction, loading } = useTransactions(user_id);
+  const { createTransaction, loading } = useTransactionContext();
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"income" | "expense" | "">("");
@@ -58,24 +57,40 @@ const CreateTransaction = () => {
       return;
     }
 
-    await createTransaction({
-      title,
-      type,
-      amount: parseFloat(amount),
-      category,
-      user_id,
-    });
+    try {
+      await createTransaction({
+        title,
+        type,
+        amount: parseFloat(amount),
+        category,
+        user_id,
+      });
 
-    Toast.show({
-      type: "success",
-      text1: "Transaction Saved ✅",
-      position: "bottom",
-    });
+      Toast.show({
+        type: "success",
+        text1: "Transaction Saved",
+        position: "bottom",
+      });
 
-    setTimeout(() => {
-      if (router.canGoBack()) router.back();
-      else router.push("/");
-    }, 1000);
+      
+      setTitle("");
+      setAmount("");
+      setCategory("");
+      setType("");
+
+      
+      setTimeout(() => {
+        if (router.canGoBack()) router.back();
+        else router.push("/");
+      }, 1000);
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to save transaction ",
+        position: "bottom",
+      });
+    }
   };
 
   return (
@@ -89,10 +104,10 @@ const CreateTransaction = () => {
           contentContainerStyle={{
             flexGrow: 1,
             padding: 12,
-            paddingBottom: 100, 
+            paddingBottom: 100,
           }}
         >
-          
+          {/* Header */}
           <View className="p-2 flex-row items-center">
             <TouchableOpacity
               onPress={() =>
@@ -198,6 +213,7 @@ const CreateTransaction = () => {
             />
           </View>
 
+          {/* Save Button */}
           <TouchableOpacity
             disabled={loading}
             onPress={handleSubmit}
@@ -207,12 +223,9 @@ const CreateTransaction = () => {
               {loading ? "Saving..." : "Save Transaction"}
             </Text>
           </TouchableOpacity>
-          
 
-        <Toast />
+          <Toast />
         </KeyboardAwareScrollView>
-
-        
       </View>
     </TouchableWithoutFeedback>
   );
