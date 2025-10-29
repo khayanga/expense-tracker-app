@@ -60,7 +60,6 @@ export async function updateRatio(req, res) {
   const { needsPercent, savingsPercent, wantsPercent, transactionId } = req.body;
 
   try {
-    
     const existingRatio = await db.userRatio.findUnique({ where: { user_id } });
     if (!existingRatio) {
       return res.status(400).json({
@@ -69,7 +68,6 @@ export async function updateRatio(req, res) {
       });
     }
 
-    
     const total = (needsPercent ?? 0) + (wantsPercent ?? 0) + (savingsPercent ?? 0);
     if (total !== 100) {
       return res.status(400).json({
@@ -78,7 +76,23 @@ export async function updateRatio(req, res) {
       });
     }
 
-    
+    let tx;
+    if (transactionId) {
+      tx = await db.transaction.findUnique({ where: { id: Number(transactionId) } });
+    } else {
+      tx = await db.transaction.findFirst({
+        where: { user_id, type: "income" },
+        orderBy: { created_at: "desc" },
+      });
+    }
+
+    if (!tx || tx.type !== "income") {
+      return res.status(400).json({
+        success: false,
+        message: "No valid income transaction found",
+      });
+    }
+
     const updatedRatio = await db.userRatio.update({
       where: { user_id },
       data: {
@@ -88,27 +102,10 @@ export async function updateRatio(req, res) {
       },
     });
 
-    
-    const tx = await db.transaction.findUnique({
-      where: { id: Number(transactionId) },
-    });
-
-    if (!tx || tx.type !== "income") {
-      return res.status(400).json({
-        success: false,
-        message: "Transaction not found or not income type",
-      });
-    }
-
-    
     await db.transaction.deleteMany({
-      where: {
-        parent_id: tx.id,
-        type: "allocation",
-      },
+      where: { parent_id: tx.id, type: "allocation" },
     });
 
-    
     const allocations = [
       {
         user_id,
@@ -158,8 +155,6 @@ export async function updateRatio(req, res) {
     });
   }
 }
-
-
 
 export async function fetchRatioById(req,res) {
     const{user_id}=req.params;

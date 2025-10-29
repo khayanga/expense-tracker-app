@@ -66,7 +66,7 @@ export default function SignUpScreen() {
 
       if (signUpAttempt.status === "complete") {
         await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace("/(tabs)");
+        router.replace("/(tabs)/home");
       } else {
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }

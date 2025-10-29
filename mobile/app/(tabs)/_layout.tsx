@@ -18,7 +18,7 @@ const TabLayout = () => {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
@@ -28,11 +28,11 @@ const TabLayout = () => {
       />
 
       <Tabs.Screen
-      name="wallet"
+      name="analytics"
       options={{
-        title:'Wallet',
+        title:'Analytics',
         tabBarIcon:({color,size})=>(
-          <Ionicons name="wallet" size={size} color={color}/>
+          <Ionicons name="analytics" size={size} color={color}/>
         )
       }}/>
 

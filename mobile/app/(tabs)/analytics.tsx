@@ -16,13 +16,14 @@ import { Link, router } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 
+
 const COLORS = [
-  "#f39c12",
-  "#9b59b6",
-  "#e74c3c",
-  "#2ecc71",
-  "#3498db",
-  "#1abc9c",
+  "#4B2E05", 
+  "#6B4C3B", 
+  "#A67B5B", 
+  "#C89F7D", 
+  "#D7B899", 
+  "#EEDAC2", 
 ];
 
 const WalletScreen = () => {
@@ -30,7 +31,7 @@ const WalletScreen = () => {
     useTransactionContext();
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
 
-  // Filtered list
+  
   const filteredTransactions = useMemo(() => {
     if (filter === "income")
       return transactions.filter((t) => t.type === "income");
@@ -40,6 +41,7 @@ const WalletScreen = () => {
     return transactions;
   }, [filter, transactions]);
 
+  
   const chartData = useMemo(() => {
     const relevantData =
       filter === "all"
@@ -58,7 +60,6 @@ const WalletScreen = () => {
       ];
     }
 
-    // Group by category
     const grouped = relevantData.reduce(
       (acc, tx) => {
         acc[tx.category] = (acc[tx.category] || 0) + Number(tx.amount);
@@ -71,11 +72,12 @@ const WalletScreen = () => {
       name: category,
       amount,
       color: COLORS[index % COLORS.length],
-      legendFontColor: "#333",
+      legendFontColor: "#4B2E05",
       legendFontSize: 13,
     }));
   }, [transactions, filter]);
 
+  
   const handleDelete = (id: number) => {
     Alert.alert(
       "Delete Transaction",
@@ -95,6 +97,7 @@ const WalletScreen = () => {
 
   return (
     <View className="flex-1 bg-coffee-background px-4 py-6">
+      {/* Header */}
       <View className="p-2 mb-4 flex-row items-center">
         <Ionicons
           name="arrow-back"
@@ -102,13 +105,12 @@ const WalletScreen = () => {
           color="#6B4C3B"
           onPress={() => router.back()}
         />
-
         <Text className="flex-1 text-center text-xl font-bold text-coffee-primary">
           Wallet Overview
         </Text>
       </View>
 
-      {/* Summary Cards */}
+      
       <View className="flex-row justify-between mb-6">
         <SummaryCard
           label="Income"
@@ -130,33 +132,39 @@ const WalletScreen = () => {
         />
       </View>
 
+      
       <View className="bg-white rounded-2xl p-4 mb-6 shadow">
         <Text className="text-lg font-semibold text-coffee-text mb-2">
           {filter === "income"
-            ? "Income "
+            ? "Income by Category"
             : filter === "expense"
-              ? "Expenses "
-              : "All Transactions "}
+            ? "Expenses by Category"
+            : "All Transactions by Category"}
         </Text>
+
         <PieChart
           data={chartData.map((item) => ({
-            name: item.name,
-            population: item.amount,
+            name: item.name, 
+            population: item.amount, 
             color: item.color,
             legendFontColor: item.legendFontColor,
             legendFontSize: item.legendFontSize,
           }))}
           width={screenWidth - 40}
-          height={200}
+          height={220}
           chartConfig={{
-            color: (opacity = 1) => `rgba(111, 78, 55, ${opacity})`,
+            backgroundColor: "#F5EDE0",
+            backgroundGradientFrom: "#F5EDE0",
+            backgroundGradientTo: "#EBDCC3",
+            color: (opacity = 1) => `rgba(75, 46, 5, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(75, 46, 5, ${opacity})`,
           }}
           accessor="population"
           backgroundColor="transparent"
           paddingLeft="15"
-          absolute
+          // absolute 
+          hasLegend={true}
         />
-       
       </View>
 
       {/* Filters */}
@@ -179,14 +187,14 @@ const WalletScreen = () => {
               {type === "all"
                 ? "All"
                 : type === "income"
-                  ? "Income"
-                  : "Expenses"}
+                ? "Income"
+                : "Expenses"}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* List */}
+      {/* Transaction List */}
       {loading ? (
         <Text className="text-center text-gray-500 mt-10">Loading...</Text>
       ) : (
@@ -204,6 +212,7 @@ const WalletScreen = () => {
     </View>
   );
 };
+
 
 const SummaryCard = ({ label, value, color, icon }: any) => (
   <View

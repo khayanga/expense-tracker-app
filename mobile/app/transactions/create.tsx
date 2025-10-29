@@ -53,7 +53,7 @@ const CreateTransaction = () => {
 
   const handleSubmit = async () => {
     if (!title || !amount || !category || !type) {
-      Alert.alert("Missing Info", "Please fill all the fields before saving.");
+      Alert.alert("Missing Info", "Please fill all fields before saving.");
       return;
     }
 
@@ -69,16 +69,14 @@ const CreateTransaction = () => {
       Toast.show({
         type: "success",
         text1: "Transaction Saved",
-        position: "bottom",
+        position: "top",
       });
 
-      
       setTitle("");
       setAmount("");
       setCategory("");
       setType("");
 
-      
       setTimeout(() => {
         if (router.canGoBack()) router.back();
         else router.push("/");
@@ -87,46 +85,48 @@ const CreateTransaction = () => {
       console.error("Error creating transaction:", error);
       Toast.show({
         type: "error",
-        text1: "Failed to save transaction ",
-        position: "bottom",
+        text1: "Failed to save transaction",
+        position: "top",
       });
     }
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View className="flex-1 bg-coffee-white">
+      <View className="flex-1 bg-coffee-background">
         <KeyboardAwareScrollView
           enableOnAndroid
-          extraScrollHeight={20}
-          enableAutomaticScroll
+          extraScrollHeight={30}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             flexGrow: 1,
-            padding: 12,
+            paddingHorizontal: 16,
+            paddingTop: 16,
             paddingBottom: 100,
           }}
         >
           {/* Header */}
-          <View className="p-2 flex-row items-center">
+          <View className="flex-row items-center mb-6">
             <TouchableOpacity
               onPress={() =>
                 router.canGoBack() ? router.back() : router.push("/")
               }
+              className="p-2 "
             >
-              <Ionicons name="arrow-back" size={24} color="#4B2E05" />
+              <Ionicons name="arrow-back" size={22} color="#4B2E05" />
             </TouchableOpacity>
-            <Text className="flex-1 text-center text-xl font-bold text-coffee-primary">
+            <Text className="flex-1 text-center text-2xl font-extrabold text-coffee-primary">
               Add Transaction
             </Text>
+             
           </View>
 
           {/* Type Selection */}
-          <View className="rounded-2xl p-2 mb-5">
-            <Text className="text-coffee-text text-lg font-semibold mb-3">
+          <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
+            <Text className="text-lg font-semibold text-coffee-text mb-4">
               Select Type
             </Text>
-            <View className="flex-row justify-between bg-coffee-card elevation-sm rounded-2xl py-4 px-2">
+            <View className="flex-row justify-between">
               {[
                 { label: "Income", value: "income", icon: "trending-up" },
                 { label: "Expense", value: "expense", icon: "trending-down" },
@@ -136,15 +136,15 @@ const CreateTransaction = () => {
                   <TouchableOpacity
                     key={t.value}
                     onPress={() => setType(t.value as "income" | "expense")}
-                    className={`flex-1 mx-1 py-3 rounded-xl border flex-row justify-center items-center gap-2 ${
+                    className={`flex-1 mx-1 py-4 rounded-xl border flex-row justify-center items-center gap-2 ${
                       isActive
                         ? "bg-[#8B5E3C] border-[#8B5E3C]"
-                        : "bg-white/20 border-[#E6C9A8]"
+                        : "bg-white border-[#E6C9A8]"
                     }`}
                   >
                     <Ionicons
                       name={t.icon as any}
-                      size={18}
+                      size={20}
                       color={isActive ? "white" : "#8B5E3C"}
                     />
                     <Text
@@ -160,22 +160,22 @@ const CreateTransaction = () => {
             </View>
           </View>
 
-          {/* Categories */}
-          <View className="bg-coffee-card rounded-2xl p-2 mb-5">
-            <Text className="text-coffee-text text-lg font-semibold mb-3">
+          {/* Category Selection */}
+          <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
+            <Text className="text-lg font-semibold text-coffee-text mb-4">
               Select Category
             </Text>
-            <View className="flex-row flex-wrap gap-3 mb-6">
+            <View className="flex-row flex-wrap  gap-3">
               {categoryOptions.map((cat) => {
                 const isSelected = category === cat;
                 return (
                   <TouchableOpacity
                     key={cat}
                     onPress={() => setCategory(cat)}
-                    className={`flex-row items-center px-3 py-2 rounded-full border ${
+                    className={`flex-row items-center px-4 py-2 rounded-full border ${
                       isSelected
                         ? "bg-coffee-primary border-[#C19A6B]"
-                        : "border-[#E6C9A8] bg-white/10"
+                        : "border-[#E6C9A8] bg-white"
                     }`}
                   >
                     <Ionicons
@@ -184,7 +184,7 @@ const CreateTransaction = () => {
                       color={isSelected ? "#fff" : "#8B5E3C"}
                     />
                     <Text
-                      className={`ml-2 text-sm ${
+                      className={`ml-2 text-sm font-medium ${
                         isSelected ? "text-white" : "text-[#8B5E3C]"
                       }`}
                     >
@@ -197,7 +197,7 @@ const CreateTransaction = () => {
           </View>
 
           {/* Inputs */}
-          <View className="p-2 mb-5">
+          <View className="bg-coffee-white rounded-2xl p-5 mb-6 shadow-sm">
             <Input
               label="Title"
               placeholder="e.g. Lunch with friends"
@@ -217,7 +217,9 @@ const CreateTransaction = () => {
           <TouchableOpacity
             disabled={loading}
             onPress={handleSubmit}
-            className="bg-[#8B5E3C] py-4 rounded-2xl shadow-md"
+            className={`py-4 rounded-2xl shadow-md ${
+              loading ? "bg-[#C19A6B]/70" : "bg-[#8B5E3C]"
+            }`}
           >
             <Text className="text-white text-center text-lg font-semibold">
               {loading ? "Saving..." : "Save Transaction"}

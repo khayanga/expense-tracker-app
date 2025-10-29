@@ -161,6 +161,52 @@ export async function getAlloctionsByTransactionId(req,res) {
   
 }
 
+export async function getLatestIncomeAllocations(req, res) {
+  const { user_id } = req.params;
+
+  try {
+   
+    const latestIncome = await db.transaction.findFirst({
+      where: {
+        user_id,
+        type: "income",
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
+
+    if (!latestIncome) {
+      return res.status(404).json({
+        success: false,
+        message: "No income transactions found for this user",
+      });
+    }
+
+    
+    const allocations = await db.transaction.findMany({
+      where: {
+        parent_id:latestIncome.id
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        income: latestIncome,
+        allocations,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching latest income allocations", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch latest income allocations",
+    });
+  }
+}
+
+
 export async function updateTransaction(req, res) {
   const { id } = req.params;
   const { amount, category, title, type } = req.body;

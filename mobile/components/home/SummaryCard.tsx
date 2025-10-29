@@ -8,16 +8,6 @@ import { useTransactionContext } from "@/context/TransactionContext";
 const SummaryCard = () => {
   const { summary, loading } = useTransactionContext();
 
-  if (loading) {
-    return (
-      <View className="px-4 mb-10">
-        <View className="rounded-2xl bg-coffee-card py-10 items-center justify-center">
-          <Text className="text-coffee-text/60">Loading summary...</Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View className="px-4 mb-10">
       <LinearGradient

@@ -4,7 +4,7 @@ import { Link } from "expo-router";
 import { useTransactionContext } from "@/context/TransactionContext";
 import EmptyState from "../EmptyState";
 import TransactionList from "../TransactionList";
-import PageLoader from "../PageLoader";
+// import PageLoader from "../PageLoader";
 
 const List = () => {
   const { transactions, deleteTransaction, loading } = useTransactionContext();
@@ -26,9 +26,7 @@ const List = () => {
     );
   };
 
-  if (loading && !transactions.length) {
-    return <PageLoader />;
-  }
+  
 
   return (
     <View className="px-4 mb-3">
@@ -36,7 +34,8 @@ const List = () => {
         <Text className="text-[18px] font-bold text-coffee-text">
           Recent Transactions
         </Text>
-        <Link href="/transactions/create">
+        <Link href="/analytics"
+         className="mr-2">
           <Text className="text-coffee-primary font-bold text-md">
             View All
           </Text>

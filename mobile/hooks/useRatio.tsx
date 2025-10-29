@@ -1,3 +1,4 @@
+import { useLoading } from "@/context/LoadingContext";
 import { Ratio } from "@/types/ratio";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
@@ -6,7 +7,7 @@ const API_URL = "http://192.168.100.40:5000/api";
 
 export const useRatio = (user_id: string) => {
   const [ratio, setRatio] = useState<Ratio | null>(null);
-  const [loading, setLoading] = useState(false);
+  const {setLoading} = useLoading()
   const [error, setError] = useState<string | null>(null);
 
   const fetchRatio = useCallback(async () => {
@@ -87,7 +88,7 @@ export const useRatio = (user_id: string) => {
       needs_percent: number;
       wants_percent: number;
       savings_percent: number;
-      transactionId?: number;
+      
     }) => {
       try {
         const total =
@@ -109,7 +110,7 @@ export const useRatio = (user_id: string) => {
             needsPercent: updatedRatio.needs_percent,
             wantsPercent: updatedRatio.wants_percent,
             savingsPercent: updatedRatio.savings_percent,
-            transactionId: updatedRatio.transactionId,
+            
           }),
         });
 
@@ -133,5 +134,5 @@ export const useRatio = (user_id: string) => {
     fetchRatio();
   }, [fetchRatio]);
 
-  return { ratio, fetchRatio, createRatio, updateRatio, loading, error };
+  return { ratio, fetchRatio, createRatio, updateRatio, error };
 };

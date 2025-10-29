@@ -3,6 +3,8 @@ import Header from "@/components/home/Header";
 import SummaryCard from "@/components/home/SummaryCard";
 import List from "@/components/home/List";
 import Banner from "@/components/home/Banner";
+import HomeButtons from "@/components/home/HomeButtons";
+import { router } from "expo-router";
 
 export default function Index() {
   return (
@@ -21,6 +23,12 @@ export default function Index() {
         }}
       >
         <SummaryCard />
+        <HomeButtons
+        onAdd={() => router.push("/transactions/create")}
+        onInvest={() => router.push("/home")}
+        onAllocate={() => router.push("/ratios")}
+        onSetGoal={() => router.push("/home")}
+        />
         <List />
         <Banner />
       </ScrollView>

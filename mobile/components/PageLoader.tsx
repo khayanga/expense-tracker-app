@@ -1,13 +1,15 @@
+import React from "react";
+import { View, ActivityIndicator } from "react-native";
+import { useLoading } from "@/context/LoadingContext";
 
-import { View, Text, ActivityIndicator } from 'react-native'
-import React from 'react'
+export const PageLoader = () => {
+  const { isLoading } = useLoading();
 
-const PageLoader = () => {
+  if (!isLoading) return null;
+
   return (
-    <View className='flex-1 justify-center items-center bg-coffee-background  '>
-      <ActivityIndicator size="large" color="#8B593E" />
+    <View className="absolute top-0 left-0 right-0 bottom-0 z-[9999] bg-coffee-background justify-center items-center">
+      <ActivityIndicator size="large" color="#8B5E3C" />
     </View>
-  )
-}
-
-export default PageLoader
+  );
+};

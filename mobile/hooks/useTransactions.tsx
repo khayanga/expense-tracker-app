@@ -1,3 +1,4 @@
+import { useLoading } from "@/context/LoadingContext";
 import { Transaction } from "@/types/transaction";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
@@ -11,7 +12,8 @@ export const useTransactions = (user_id: string) => {
     balance: 0,
     expenses: 0,
   });
-  const [loading, setLoading] = useState(false);
+  const{setLoading}= useLoading()
+
   const [error, setError] = useState<string | null>(null);
 
   const fetchTransactions = useCallback(async () => {
@@ -53,10 +55,11 @@ export const useTransactions = (user_id: string) => {
     } finally {
       setLoading(false);
     }
-  }, [user_id, fetchTransactions, fetchSummary]);
+  }, [user_id, fetchTransactions, fetchSummary, setLoading]);
 
   const deleteTransaction = useCallback(
     async (id: number) => {
+      setLoading(true);
       try {
         const response = await fetch(`${API_URL}/transactions/id/${id}`, {
           method: "DELETE",
@@ -70,8 +73,12 @@ export const useTransactions = (user_id: string) => {
         console.error("Error deleting transaction:", err);
         Alert.alert("Error", "Failed to delete transaction");
       }
+      finally {
+        setLoading(false);
+        
+      }
     },
-    [loadData]
+    [loadData,setLoading]
   );
 
   const createTransaction = useCallback(
@@ -105,7 +112,6 @@ export const useTransactions = (user_id: string) => {
   return {
     transactions,
     summary,
-    loading,
     error,
     loadData,
     deleteTransaction,
