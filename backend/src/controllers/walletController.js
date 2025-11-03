@@ -73,67 +73,112 @@ export const initiateTopUp = async (req, res) => {
 };
 
 export const mpesaCallback = async (req, res) => {
+  console.log("🔔 MPesa Callback Received!");
+  console.log("📦 Full request body:", JSON.stringify(req.body, null, 2));
+  console.log("🔍 Headers:", req.headers);
+  
   try {
     const { Body } = req.body;
     const stkCallback = Body?.stkCallback;
 
-    if (!stkCallback) return res.status(400).send("Invalid callback body");
+    if (!stkCallback) {
+      console.error("❌ Invalid callback structure");
+      console.log("Available keys:", Object.keys(req.body));
+      return res.status(400).send("Invalid callback body");
+    }
+
+    console.log("📋 STK Callback details:", {
+      CheckoutRequestID: stkCallback.CheckoutRequestID,
+      ResultCode: stkCallback.ResultCode,
+      ResultDesc: stkCallback.ResultDesc,
+      CallbackMetadata: stkCallback.CallbackMetadata
+    });
 
     const reference = stkCallback.CheckoutRequestID;
     const resultCode = stkCallback.ResultCode;
+    const resultDesc = stkCallback.ResultDesc;
 
-    if (!reference) return res.status(400).send("No reference provided");
+    if (!reference) {
+      console.error("❌ Missing CheckoutRequestID");
+      return res.status(400).send("No reference provided");
+    }
 
-    // Extract amount from callback metadata
-    const amount = stkCallback.CallbackMetadata?.Item.find(
-      (i) => i.Name === "Amount"
-    )?.Value;
-
-    if (!amount) return res.status(400).send("Amount not found in callback");
-
-    // 1️⃣ Find the wallet transaction and include wallet relation
+    // Find wallet transaction
     const walletTx = await db.walletTransaction.findFirst({
       where: { reference },
       include: { wallet: true },
     });
 
-    if (!walletTx) return res.status(404).send("WalletTransaction not found");
+    console.log("💾 Database lookup result:", walletTx ? "Found" : "Not found");
 
+    if (!walletTx) {
+      console.error("❌ WalletTransaction not found for reference:", reference);
+      return res.status(404).send("WalletTransaction not found");
+    }
+
+    // Process based on result code
     if (resultCode === 0) {
+      console.log("✅ Processing successful transaction");
       
+      const amountItem = stkCallback.CallbackMetadata?.Item?.find((i) => i.Name === "Amount");
+      const amount = amountItem?.Value || 0;
+      const mpesaReceipt = stkCallback.CallbackMetadata?.Item?.find((i) => i.Name === "MpesaReceiptNumber")?.Value;
+
+      console.log("💰 Amount:", amount, "Receipt:", mpesaReceipt);
+
+      // Update wallet transaction
       await db.walletTransaction.update({
         where: { id: walletTx.id },
-        data: { status: "completed" },
+        data: { 
+          status: "completed",
+          metadata: { mpesaReceipt, ...stkCallback.CallbackMetadata }
+        },
       });
 
-      
+      // Update wallet balance
       await db.wallet.update({
         where: { id: walletTx.wallet_id },
         data: { balance: { increment: amount } },
       });
 
-      
+      // Create transaction record
       await db.transaction.create({
         data: {
-          user_id: walletTx.wallet.user_id, 
+          user_id: walletTx.wallet.user_id,
           amount,
           category: "Wallet Top-Up",
           title: "Top-up successful",
           type: "income",
           wallet_id: walletTx.wallet.id,
+          reference: mpesaReceipt,
         },
       });
+
+      console.log("🎉 MPesa top-up completed successfully");
     } else {
+      console.log("❌ Transaction failed:", resultDesc);
       
       await db.walletTransaction.update({
         where: { id: walletTx.id },
-        data: { status: "failed" },
+        data: {
+          status: "failed",
+          // failure_reason: resultDesc,
+        },
       });
     }
 
-    res.status(200).json({ message: "Callback processed" });
+    // IMPORTANT: Send response immediately
+    res.status(200).json({ 
+      ResultCode: 0, 
+      ResultDesc: "Success" 
+    });
+    
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Callback error", details: error.message });
-}
+    console.error("🔥 Callback processing error:", error);
+    // Still respond successfully to MPesa to avoid retries
+    res.status(200).json({ 
+      ResultCode: 0, 
+      ResultDesc: "Accepted with errors" 
+    });
+  }
 };

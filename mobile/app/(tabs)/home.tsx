@@ -25,7 +25,7 @@ export default function Index() {
         <SummaryCard />
         <HomeButtons
         onAdd={() => router.push("/transactions/create")}
-        onInvest={() => router.push("/home")}
+        onInvest={() => router.push("/transactions/wallet")}
         onAllocate={() => router.push("/ratios")}
         onSetGoal={() => router.push("/home")}
         />
