@@ -13,6 +13,12 @@ enum TransactionType {
   allocation
 }
 
+enum PaymentStatus {
+  pending
+  completed
+  failed
+}
+
 model Transaction {
   id          Int             @id @default(autoincrement())
   user_id     String          @db.VarChar(255)
@@ -21,8 +27,10 @@ model Transaction {
   title       String          @db.VarChar(255)
   type        TransactionType @default(expense)
   parent_id   Int?
+  wallet_id   Int?
   created_at  DateTime?       @default(dbgenerated("CURRENT_DATE")) @db.Date
   parent      Transaction?    @relation("TransactionToAllocation", fields: [parent_id], references: [id])
+  wallet      Wallet?         @relation(fields: [wallet_id], references: [id])
   allocations Transaction[]   @relation("TransactionToAllocation")
 
   @@index([user_id])
@@ -36,4 +44,39 @@ model UserRatio {
   savings_percent Int
   created_at      DateTime? @default(dbgenerated("CURRENT_DATE")) @db.Date
   updated_at      DateTime  @updatedAt
+}
+
+model Wallet {
+  id                 Int                 @id @default(autoincrement())
+  user_id            String              @unique @db.VarChar(255)
+  balance            Decimal             @default(0.00) @db.Decimal(10, 2)
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  transactions       Transaction[]
+  walletTransactions WalletTransaction[]
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  user_id       String   @db.VarChar(255)
+  amount        Decimal  @db.Decimal(10, 2)
+  type          String
+  paybill       String?
+  accountNumber String?
+  status        String   @default("pending")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id         Int      @id @default(autoincrement())
+  wallet_id  Int
+  amount     Decimal  @db.Decimal(10, 2)
+  status     String   @default("pending") 
+  reference  String?  @db.VarChar(255)
+  method     String   @default("mpesa") // mpesa | manual
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  wallet Wallet @relation(fields: [wallet_id], references: [id])
 }
