@@ -27,10 +27,11 @@ model Transaction {
   title       String          @db.VarChar(255)
   type        TransactionType @default(expense)
   parent_id   Int?
-  wallet_id   Int?
+  wallet_id   Int? 
+  reference   String?         @db.VarChar(255)
   created_at  DateTime?       @default(dbgenerated("CURRENT_DATE")) @db.Date
   parent      Transaction?    @relation("TransactionToAllocation", fields: [parent_id], references: [id])
-  wallet      Wallet?         @relation(fields: [wallet_id], references: [id])
+ wallet      Wallet?         @relation(fields: [wallet_id], references: [id])
   allocations Transaction[]   @relation("TransactionToAllocation")
 
   @@index([user_id])

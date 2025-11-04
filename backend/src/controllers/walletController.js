@@ -2,6 +2,8 @@ import axios from "axios";
 import { getMpesaToken } from "../lib/utils/mpesa.js";
 import db from "../lib/prisma.js";
 
+
+
 export const initiateTopUp = async (req, res) => {
   try {
     const { user_id, amount, phone } = req.body;
@@ -50,19 +52,34 @@ export const initiateTopUp = async (req, res) => {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
+    
+    console.log("📡 Full M-Pesa Response:", JSON.stringify(response.data, null, 2));
+    
+    const checkoutRequestId = response.data.CheckoutRequestID;
+    const merchantRequestId = response.data.MerchantRequestID;
+    
+    if (!checkoutRequestId) {
+      throw new Error("No CheckoutRequestID in M-Pesa response");
+    }
+
+    
     await db.walletTransaction.create({
       data: {
         wallet_id: wallet.id,
         amount,
         status: "pending",
-        reference: response.data.CheckoutRequestID,
+        reference: checkoutRequestId, 
         method: "mpesa",
       },
     });
 
-    res.json({ message: "STK Push initiated", data: response.data });
+    res.json({ 
+      message: "STK Push initiated", 
+      data: response.data,
+      checkoutRequestId 
+    });
   } catch (error) {
-    // Detailed logging for debugging
+    
     if (axios.isAxiosError(error)) {
       console.error("Axios error response:", error.response?.data || error.message);
     } else {
@@ -75,7 +92,6 @@ export const initiateTopUp = async (req, res) => {
 export const mpesaCallback = async (req, res) => {
   console.log("🔔 MPesa Callback Received!");
   console.log("📦 Full request body:", JSON.stringify(req.body, null, 2));
-  console.log("🔍 Headers:", req.headers);
   
   try {
     const { Body } = req.body;
@@ -83,73 +99,87 @@ export const mpesaCallback = async (req, res) => {
 
     if (!stkCallback) {
       console.error("❌ Invalid callback structure");
-      console.log("Available keys:", Object.keys(req.body));
       return res.status(400).send("Invalid callback body");
     }
-
-    console.log("📋 STK Callback details:", {
-      CheckoutRequestID: stkCallback.CheckoutRequestID,
-      ResultCode: stkCallback.ResultCode,
-      ResultDesc: stkCallback.ResultDesc,
-      CallbackMetadata: stkCallback.CallbackMetadata
-    });
 
     const reference = stkCallback.CheckoutRequestID;
     const resultCode = stkCallback.ResultCode;
     const resultDesc = stkCallback.ResultDesc;
+
+    console.log("📋 Processing callback for reference:", reference);
 
     if (!reference) {
       console.error("❌ Missing CheckoutRequestID");
       return res.status(400).send("No reference provided");
     }
 
-    // Find wallet transaction
-    const walletTx = await db.walletTransaction.findFirst({
+    
+    let walletTx = await db.walletTransaction.findFirst({
       where: { reference },
       include: { wallet: true },
     });
+
+    
+    if (!walletTx) {
+      console.log("⏳ Transaction not found immediately, retrying...");
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      walletTx = await db.walletTransaction.findFirst({
+        where: { reference },
+        include: { wallet: true },
+      });
+    }
 
     console.log("💾 Database lookup result:", walletTx ? "Found" : "Not found");
 
     if (!walletTx) {
       console.error("❌ WalletTransaction not found for reference:", reference);
-      return res.status(404).send("WalletTransaction not found");
+      
+      return res.status(200).json({ 
+        ResultCode: 0, 
+        ResultDesc: "Accepted but transaction not found" 
+      });
     }
 
-    // Process based on result code
+    
     if (resultCode === 0) {
       console.log("✅ Processing successful transaction");
       
-      const amountItem = stkCallback.CallbackMetadata?.Item?.find((i) => i.Name === "Amount");
-      const amount = amountItem?.Value || 0;
-      const mpesaReceipt = stkCallback.CallbackMetadata?.Item?.find((i) => i.Name === "MpesaReceiptNumber")?.Value;
+      const callbackMetadata = stkCallback.CallbackMetadata;
+      let amount = 0;
+      let mpesaReceipt = "Unknown";
+
+      if (callbackMetadata && callbackMetadata.Item) {
+        amount = callbackMetadata.Item.find(i => i.Name === "Amount")?.Value || walletTx.amount;
+        mpesaReceipt = callbackMetadata.Item.find(i => i.Name === "MpesaReceiptNumber")?.Value || "Unknown";
+      }
 
       console.log("💰 Amount:", amount, "Receipt:", mpesaReceipt);
 
-      // Update wallet transaction
+      
       await db.walletTransaction.update({
         where: { id: walletTx.id },
         data: { 
           status: "completed",
-          metadata: { mpesaReceipt, ...stkCallback.CallbackMetadata }
+          
         },
       });
 
-      // Update wallet balance
+      
+      const amountDecimal = parseFloat(amount);
       await db.wallet.update({
         where: { id: walletTx.wallet_id },
-        data: { balance: { increment: amount } },
+        data: { balance: { increment: amountDecimal } },
       });
 
-      // Create transaction record
+  
       await db.transaction.create({
         data: {
           user_id: walletTx.wallet.user_id,
-          amount,
+          amount: amountDecimal,
           category: "Wallet Top-Up",
-          title: "Top-up successful",
+          title: "Mpesa Top-up ",
           type: "income",
-          wallet_id: walletTx.wallet.id,
+          wallet:{ connect: { id: walletTx.wallet.id } },
           reference: mpesaReceipt,
         },
       });
@@ -162,12 +192,12 @@ export const mpesaCallback = async (req, res) => {
         where: { id: walletTx.id },
         data: {
           status: "failed",
-          // failure_reason: resultDesc,
+          
         },
       });
     }
 
-    // IMPORTANT: Send response immediately
+    
     res.status(200).json({ 
       ResultCode: 0, 
       ResultDesc: "Success" 
@@ -175,10 +205,12 @@ export const mpesaCallback = async (req, res) => {
     
   } catch (error) {
     console.error("🔥 Callback processing error:", error);
-    // Still respond successfully to MPesa to avoid retries
+    
     res.status(200).json({ 
       ResultCode: 0, 
       ResultDesc: "Accepted with errors" 
     });
   }
 };
+
+
