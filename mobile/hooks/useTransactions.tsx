@@ -32,7 +32,7 @@ export const useTransactions = (user_id: string) => {
   const fetchSummary = useCallback(async () => {
     try {
       const response = await fetch(
-        `${API_URL}/transactions/summary/${user_id}`
+        `${API_URL}/transactions/wallet/summary/${user_id}`
       );
       const data = await response.json();
       if (!data.success)

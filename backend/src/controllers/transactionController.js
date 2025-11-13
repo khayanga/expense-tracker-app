@@ -304,3 +304,56 @@ export async function getSummary(req, res) {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
+
+export async function getWalletSummary(req, res) {
+  try {
+    const { user_id } = req.params;
+
+    
+    const walletTransactions = await db.walletTransaction.findMany({
+      where: { 
+        wallet: { user_id }, 
+        status: "completed"
+      },
+    });
+
+    const totalTopUps = walletTransactions
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    
+    const expensesTransactions = await db.transaction.findMany({
+      where: { user_id, type: "expense" },
+    });
+
+    const totalExpenses = expensesTransactions
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    
+    const balance = totalTopUps - totalExpenses;
+
+    
+    const formatKES = (value) =>
+      new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: "KES",
+        minimumFractionDigits: 2,
+      }).format(value);
+
+    res.status(200).json({
+      success: true,
+      message: "Transaction summary fetched successfully",
+      data: {
+        income: formatKES(totalTopUps),
+        expenses: `-${formatKES(totalExpenses)}`,
+        balance: formatKES(balance),
+      },
+    });
+
+  } catch (error) {
+    console.error("Error getting the summary:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
+
+
+

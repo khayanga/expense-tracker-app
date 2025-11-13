@@ -15,6 +15,7 @@ import Input from "@/components/Input";
 import Toast from "react-native-toast-message";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useTransactionContext } from "@/context/TransactionContext";
+import MpesaTopUpModal from "@/components/MpesaTopupModal";
 
 const categoryOptions: TransactionCategory[] = [
   "Food & Drinks",
@@ -43,6 +44,8 @@ const CreateTransaction = () => {
   const router = useRouter();
   const { user } = useUser();
   const user_id = user?.id || "";
+  const [showMpesaModal, setShowMpesaModal] = useState(false);
+
 
   const { createTransaction, loading } = useTransactionContext();
 
@@ -50,10 +53,15 @@ const CreateTransaction = () => {
   const [type, setType] = useState<"income" | "expense" | "">("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<TransactionCategory | "">("");
-
-  const handleSubmit = async () => {
-    if (!title || !amount || !category || !type) {
+   const handleSubmit = async () => {
+    if (!title || !category || !type) {
       Alert.alert("Missing Info", "Please fill all fields before saving.");
+      return;
+    }
+
+    
+    if (type === "expense" && !amount) {
+      Alert.alert("Missing Info", "Please enter the amount for expense.");
       return;
     }
 
@@ -61,7 +69,7 @@ const CreateTransaction = () => {
       await createTransaction({
         title,
         type,
-        amount: parseFloat(amount),
+        amount: parseFloat(amount) || 0,
         category,
         user_id,
       });
@@ -90,8 +98,9 @@ const CreateTransaction = () => {
       });
     }
   };
+ 
 
-  return (
+  return(
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View className="flex-1 bg-coffee-background">
         <KeyboardAwareScrollView
@@ -118,7 +127,6 @@ const CreateTransaction = () => {
             <Text className="flex-1 text-center text-2xl font-extrabold text-coffee-primary">
               Add Transaction
             </Text>
-             
           </View>
 
           {/* Type Selection */}
@@ -196,7 +204,7 @@ const CreateTransaction = () => {
             </View>
           </View>
 
-          {/* Inputs */}
+          {/* Inputs or M-Pesa Trigger */}
           <View className="bg-coffee-white rounded-2xl p-5 mb-6 shadow-sm">
             <Input
               label="Title"
@@ -204,30 +212,60 @@ const CreateTransaction = () => {
               value={title}
               onChangeText={setTitle}
             />
-            <Input
-              label="Amount"
-              placeholder="e.g. 1200"
-              value={amount}
-              onChangeText={setAmount}
-              keyBoardType="numeric"
-            />
+
+            {type === "expense" && (
+              <Input
+                label="Amount"
+                placeholder="e.g. 1200"
+                value={amount}
+                onChangeText={setAmount}
+                keyBoardType="numeric"
+              />
+            )}
+
+            {type === "income" && (
+              <TouchableOpacity
+                onPress={() => setShowMpesaModal(true)}
+                className="bg-coffee-primary py-4 rounded-xl mt-4"
+              >
+                <Text className="text-center text-coffee-white font-semibold">
+                  Top Up via M-Pesa
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Save Button */}
-          <TouchableOpacity
-            disabled={loading}
-            onPress={handleSubmit}
-            className={`py-4 rounded-2xl shadow-md ${
-              loading ? "bg-[#C19A6B]/70" : "bg-[#8B5E3C]"
-            }`}
-          >
-            <Text className="text-white text-center text-lg font-semibold">
-              {loading ? "Saving..." : "Save Transaction"}
-            </Text>
-          </TouchableOpacity>
+          {type === "expense" && (
+            <TouchableOpacity
+              disabled={loading}
+              onPress={handleSubmit}
+              className={`py-4 rounded-2xl shadow-md ${
+                loading ? "bg-[#C19A6B]/70" : "bg-[#8B5E3C]"
+              }`}
+            >
+              <Text className="text-white text-center text-lg font-semibold">
+                {loading ? "Saving..." : "Save Transaction"}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <Toast />
         </KeyboardAwareScrollView>
+
+        {/* M-PESA MODAL */}
+        <MpesaTopUpModal
+          visible={showMpesaModal}
+          onClose={() => setShowMpesaModal(false)}
+          user_id={user_id}
+          onSuccess={(amount: number) => {
+            Toast.show({
+              type: "success",
+              text1: `STK Push initiated for KES ${amount}`,
+              position: "top",
+            });
+          }}
+        />
       </View>
     </TouchableWithoutFeedback>
   );

@@ -5,8 +5,19 @@ import List from "@/components/home/List";
 import Banner from "@/components/home/Banner";
 import HomeButtons from "@/components/home/HomeButtons";
 import { router } from "expo-router";
+import { useTransactionContext } from "@/context/TransactionContext";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function Index() {
+  const { loadData } = useTransactionContext();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+  
   return (
     <View className="flex-1 bg-coffee-background">
       
