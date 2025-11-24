@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WalletTransactionType {
+  topup
+  expense
+  allocation
+  transfer
+}
+
+enum WalletDirection {
+  credit
+  debit
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  reversed
+}
+
+model Wallet {
+  id           Int                 @id @default(autoincrement())
+  user_id      String              @unique @db.VarChar(255)
+  balance      Decimal             @default(0.00) @db.Decimal(10, 2)
+  created_at   DateTime            @default(now())
+  updated_at   DateTime            @updatedAt
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id         Int                   @id @default(autoincrement())
+  wallet_id  Int
+  user_id    String                @db.VarChar(255)
+  amount     Decimal               @db.Decimal(10, 2)
+  type       WalletTransactionType
+  direction  WalletDirection
+  category   String?               @db.VarChar(255)
+  reference  String?               @db.VarChar(255)
+  method     String?               @default("mpesa")
+  status     PaymentStatus         @default(pending)
+  created_at DateTime              @default(now())
+  updated_at DateTime              @updatedAt
+
+  wallet Wallet @relation(fields: [wallet_id], references: [id])
+
+  @@index([wallet_id])
+  @@index([user_id])
+  @@index([type])
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  user_id       String        @db.VarChar(255)
+  amount        Decimal       @db.Decimal(10, 2)
+  type          String
+  paybill       String?
+  accountNumber String?
+  status        PaymentStatus @default(pending)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+}
+
+model UserRatio {
+  id              Int       @id @default(autoincrement())
+  user_id         String    @unique @db.VarChar(255)
+  needs_percent   Int
+  wants_percent   Int
+  savings_percent Int
+  created_at      DateTime? @default(now())
+  updated_at      DateTime  @updatedAt
+}

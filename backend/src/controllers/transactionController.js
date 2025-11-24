@@ -317,6 +317,7 @@ export async function getWalletSummary(req, res) {
       },
     });
 
+
     const totalTopUps = walletTransactions
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
