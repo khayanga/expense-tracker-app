@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { PieChart } from "react-native-chart-kit";
-import { useTransactionContext } from "@/context/TransactionContext";
+import { useTransactionContext } from "@/context/WalletContext";
 import TransactionList from "@/components/TransactionList";
 import EmptyState from "@/components/EmptyState";
 import { Link, router } from "expo-router";

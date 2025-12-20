@@ -1,7 +1,5 @@
 generator client {
- provider = "prisma-client"
- output   = "../src/generated/prisma"
-  
+ provider = "prisma-client-js" 
 }
 
 datasource db {
@@ -30,11 +28,20 @@ enum PaymentStatus {
   failed
   reversed
 }
+enum BudgetBucket {
+  needs
+  wants
+  savings
+}
+
 
 model Wallet {
   id           Int                 @id @default(autoincrement())
   user_id      String              @unique @db.VarChar(255)
   balance      Decimal             @default(0.00) @db.Decimal(10, 2)
+  needs_balance   Decimal             @default(0.00) @db.Decimal(10, 2)
+  wants_balance   Decimal             @default(0.00) @db.Decimal(10, 2)
+  savings_balance Decimal             @default(0.00) @db.Decimal(10, 2)
   created_at   DateTime            @default(now())
   updated_at   DateTime            @updatedAt
   transactions WalletTransaction[]
@@ -47,18 +54,19 @@ model WalletTransaction {
   amount     Decimal                @db.Decimal(10, 2)
   type       WalletTransactionType
   direction  WalletDirection
+   bucket     BudgetBucket?
   category   String?                @db.VarChar(255) 
   reference  String?                @db.VarChar(255)
   method     String?                @default("mpesa") 
   status     PaymentStatus          @default(pending)
   created_at DateTime               @default(now())
   updated_at DateTime               @updatedAt
-
   wallet     Wallet                 @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id])
   @@index([user_id])
   @@index([type])
+  @@index([bucket])
 }
 
 model Payment {
@@ -81,4 +89,6 @@ model UserRatio {
   savings_percent Int
   created_at      DateTime? @default(now())
   updated_at      DateTime  @updatedAt
+
+  
 }

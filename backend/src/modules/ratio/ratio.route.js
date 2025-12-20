@@ -4,7 +4,7 @@ import {
   deleteUserRatio,
   fetchRatioById,
   updateRatio,
-} from "../controllers/userRatioController.js";
+} from "./ratio.controller.js";
 
 const router = express.Router();
 

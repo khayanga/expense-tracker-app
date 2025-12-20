@@ -21,7 +21,7 @@ const API_URL = "https://huong-veracious-mariko.ngrok-free.dev/api";
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_URL}/wallet/topup`, {
+      const res = await fetch(`${API_URL}/mpesa/topup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

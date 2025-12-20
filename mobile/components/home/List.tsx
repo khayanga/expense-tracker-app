@@ -1,13 +1,13 @@
 import React from "react";
 import { View, Text, Alert } from "react-native";
 import { Link } from "expo-router";
-import { useTransactionContext } from "@/context/TransactionContext";
 import EmptyState from "../EmptyState";
 import TransactionList from "../TransactionList";
+import { useWalletContext } from "@/context/WalletContext";
 // import PageLoader from "../PageLoader";
 
 const List = () => {
-  const { transactions, deleteTransaction, loading } = useTransactionContext();
+  const { transactions, deleteTransaction, loading } = useWalletContext();
 
   const handleDelete = (id: number) => {
     Alert.alert(

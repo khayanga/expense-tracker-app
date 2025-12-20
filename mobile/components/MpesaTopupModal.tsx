@@ -9,7 +9,8 @@ import {
 } from "react-native";
 import Input from "./Input";
 import Toast from "react-native-toast-message";
-import { useTransactionContext } from "@/context/TransactionContext";
+import { useWalletContext } from "@/context/WalletContext";
+
 interface MpesaTopupModalProps {
   visible: boolean;
   onClose: () => void;
@@ -25,7 +26,7 @@ const MpesaTopupModal: React.FC<MpesaTopupModalProps> = ({
   const [phone, setPhone] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
-   const { loadData } = useTransactionContext(); 
+   const { loadData } = useWalletContext(); 
   const API_URL = "https://huong-veracious-mariko.ngrok-free.dev/api";
 
 const handleTopUp = async () => {
@@ -34,7 +35,7 @@ const handleTopUp = async () => {
 
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/wallet/topup`, {
+      const res = await fetch(`${API_URL}/mpesa/topup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id, phone, amount: Number(amount) }),
@@ -47,13 +48,13 @@ const handleTopUp = async () => {
         setTimeout(async () => {
           await loadData(); 
           onSuccess(Number(amount)); 
-          Toast.show({
-            type: "success",
-            text1: "Top up saved successfully",
-            position: "top",
-          });
+          // Toast.show({
+          //   type: "success",
+          //   text1: "Top up saved successfully",
+          //   position: "top",
+          // });
           onClose();
-        }, 5000); 
+        }, 10000); 
       } else {
         Alert.alert("Error", data.error || "Unexpected response from server.");
       }

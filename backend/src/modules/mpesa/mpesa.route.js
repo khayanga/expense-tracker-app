@@ -1,5 +1,5 @@
 import express from "express";
-import { initiateTopUp, mpesaCallback } from "../controllers/walletController.js";
+import { initiateTopUp, mpesaCallback } from "./mpesa.controller.js";
 const router = express.Router();
 
 router.post("/topup", initiateTopUp)

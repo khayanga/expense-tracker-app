@@ -2,11 +2,12 @@ import { View, Text } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useTransactionContext } from "@/context/TransactionContext";
+import { useWalletContext } from "@/context/WalletContext";
+
 
 
 const SummaryCard = () => {
-  const { summary, loading } = useTransactionContext();
+  const { summary, loading } = useWalletContext();
 
   return (
     <View className="px-4 mb-10">
@@ -46,20 +47,20 @@ const SummaryCard = () => {
             <Text className="text-white/80 text-md font-medium mb-1">
               Income
             </Text>
-            <Text className="text-green-300 text-xl font-bold">
-               {summary.income.toLocaleString()}
-            </Text>
+            {/* <Text className="text-green-300 text-xl font-bold">
+               {summary.walletBalance.toLocaleString()}
+            </Text> */}
           </View>
 
            <View className="flex-1 items-center border-r border-white/20">
             <Text className="text-white/80 text-md font-medium mb-1">
               Expenses
             </Text>
-            <Text className="text-red-300 text-xl font-bold">
+            {/* <Text className="text-red-300 text-xl font-bold">
               {summary.expenses < 0
                 ? Math.abs(summary.expenses)
                 : summary.expenses}
-            </Text>
+            </Text> */}
           </View>
         </View>
       </LinearGradient>

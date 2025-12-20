@@ -14,7 +14,7 @@ import { TransactionCategory } from "@/types/transaction";
 import Input from "@/components/Input";
 import Toast from "react-native-toast-message";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useTransactionContext } from "@/context/TransactionContext";
+import {  useWalletContext } from "@/context/WalletContext";
 import MpesaTopUpModal from "@/components/MpesaTopupModal";
 
 const categoryOptions: TransactionCategory[] = [
@@ -47,7 +47,7 @@ const CreateTransaction = () => {
   const [showMpesaModal, setShowMpesaModal] = useState(false);
 
 
-  const { createTransaction, loading } = useTransactionContext();
+  const { createExpense, loading } = useWalletContext();
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"income" | "expense" | "">("");
@@ -66,12 +66,11 @@ const CreateTransaction = () => {
     }
 
     try {
-      await createTransaction({
-        title,
-        type,
+      await createExpense({
+      
         amount: parseFloat(amount) || 0,
         category,
-        user_id,
+        // user_id,
       });
 
       Toast.show({

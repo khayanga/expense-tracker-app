@@ -46,7 +46,7 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { TransactionProvider } from "@/context/TransactionContext";
+import {  WalletProvider } from "@/context/WalletContext";
 import { LoadingProvider } from "@/context/LoadingContext";
 import { PageLoader } from "@/components/PageLoader";
 import SafeAreaScreen from "@/components/SafeAreaScreen";
@@ -85,12 +85,12 @@ function AppContent() {
     <>
       <SignedIn>
         <LoadingProvider>
-          <TransactionProvider>
+          <WalletProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
             </Stack>
             <PageLoader />
-          </TransactionProvider>
+          </WalletProvider>
         </LoadingProvider>
       </SignedIn>
 
