@@ -8,13 +8,17 @@ export type TransactionCategory =
   | "Salary"
   | "Other";
 
+
+export type WalletBucket = "Needs" | "Wants" | "Savings";
+
 export type Transaction = {
   id: number;
-  title: string;
+  title?: string;
   amount: number;
   type:string;
   category: TransactionCategory;
   user_id: string;
+  bucket?: WalletBucket; 
   created_at?: string;
 };
 

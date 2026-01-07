@@ -4,7 +4,7 @@ import { Link } from "expo-router";
 import EmptyState from "../EmptyState";
 import TransactionList from "../TransactionList";
 import { useWalletContext } from "@/context/WalletContext";
-// import PageLoader from "../PageLoader";
+
 
 const List = () => {
   const { transactions, deleteTransaction, loading } = useWalletContext();

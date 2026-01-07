@@ -14,7 +14,7 @@ import { TransactionCategory } from "@/types/transaction";
 import Input from "@/components/Input";
 import Toast from "react-native-toast-message";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import {  useWalletContext } from "@/context/WalletContext";
+import { useWalletContext } from "@/context/WalletContext";
 import MpesaTopUpModal from "@/components/MpesaTopupModal";
 
 const categoryOptions: TransactionCategory[] = [
@@ -45,21 +45,18 @@ const CreateTransaction = () => {
   const { user } = useUser();
   const user_id = user?.id || "";
   const [showMpesaModal, setShowMpesaModal] = useState(false);
-
-
   const { createExpense, loading } = useWalletContext();
-
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"income" | "expense" | "">("");
+  const [bucket, setBucket] = useState<"needs" | "wants">("needs");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<TransactionCategory | "">("");
-   const handleSubmit = async () => {
+  const handleSubmit = async () => {
     if (!title || !category || !type) {
       Alert.alert("Missing Info", "Please fill all fields before saving.");
       return;
     }
 
-    
     if (type === "expense" && !amount) {
       Alert.alert("Missing Info", "Please enter the amount for expense.");
       return;
@@ -67,10 +64,10 @@ const CreateTransaction = () => {
 
     try {
       await createExpense({
-      
-        amount: parseFloat(amount) || 0,
+        amount: parseFloat(amount),
         category,
-        // user_id,
+        bucket,
+        title,
       });
 
       Toast.show({
@@ -97,9 +94,8 @@ const CreateTransaction = () => {
       });
     }
   };
- 
 
-  return(
+  return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View className="flex-1 bg-coffee-background">
         <KeyboardAwareScrollView
@@ -167,7 +163,43 @@ const CreateTransaction = () => {
             </View>
           </View>
 
-          {/* Category Selection */}
+          {type === "expense" && (
+            <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
+              <Text className="text-lg font-semibold text-coffee-text mb-4">
+                Select Bucket
+              </Text>
+
+              <View className="flex-row justify-between">
+                {[
+                  { label: "Needs", value: "needs" },
+                  { label: "Wants", value: "wants" },
+                ].map((b) => {
+                  const isActive = bucket === b.value;
+                  return (
+                    <TouchableOpacity
+                      key={b.value}
+                      onPress={() => setBucket(b.value as "needs" | "wants")}
+                      className={`flex-1 mx-1 py-4 rounded-xl border ${
+                        isActive
+                          ? "bg-[#8B5E3C] border-[#8B5E3C]"
+                          : "bg-white border-[#E6C9A8]"
+                      }`}
+                    >
+                      <Text
+                        className={`text-center text-base font-semibold ${
+                          isActive ? "text-white" : "text-[#8B5E3C]"
+                        }`}
+                      >
+                        {b.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          
           <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
             <Text className="text-lg font-semibold text-coffee-text mb-4">
               Select Category
@@ -203,7 +235,7 @@ const CreateTransaction = () => {
             </View>
           </View>
 
-          {/* Inputs or M-Pesa Trigger */}
+          
           <View className="bg-coffee-white rounded-2xl p-5 mb-6 shadow-sm">
             <Input
               label="Title"
@@ -234,7 +266,7 @@ const CreateTransaction = () => {
             )}
           </View>
 
-          {/* Save Button */}
+          
           {type === "expense" && (
             <TouchableOpacity
               disabled={loading}

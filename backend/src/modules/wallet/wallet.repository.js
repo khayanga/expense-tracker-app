@@ -42,6 +42,9 @@ export const getWalletSummaryByUser = async (userId) => {
 
   return {
     balance: Number(wallet.balance),
+    needs_balance: Number(wallet.needs_balance),
+    wants_balance: Number(wallet.wants_balance),
+    savings_balance: Number(wallet.savings_balance),
     totalTopUps,
     totalExpenses,
     allocatedAmount: allocations,

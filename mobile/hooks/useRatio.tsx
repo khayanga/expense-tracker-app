@@ -5,6 +5,7 @@ import { Alert } from "react-native";
 
 const API_URL = "http://192.168.100.40:5000/api";
 
+
 export const useRatio = (user_id: string) => {
   const [ratio, setRatio] = useState<Ratio | null>(null);
   const {setLoading} = useLoading()

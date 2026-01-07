@@ -54,23 +54,32 @@ export const getWalletSummary = async (req, res) => {
 
 export const createExpense = async (req, res) => {
   try {
-    const { user_id, amount, category, bucket } = req.body;
+    const { user_id, amount, category, bucket,title} = req.body;
 
-    if (!user_id || !amount || !category) {
+    if (!user_id || !amount || !category || !bucket || !title) {
       return res.status(400).json({
         success: false,
-        message: "user_id, amount, and category are required",
+        message: "All fields are required",
       });
     }
 
-    const expense = await service.createExpense({ user_id, amount, category, bucket });
+    const expense = await service.createExpense({
+      user_id,
+      amount,
+      category,
+      bucket,
+      title
+    });
+
     res.status(201).json({
       success: true,
-      message: `Expense of ${amount} deducted from ${expense.bucket}`,
+      message: `Expense deducted from ${bucket}`,
       data: expense,
     });
   } catch (error) {
-    console.error("Expense creation error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

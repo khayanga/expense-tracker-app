@@ -4,8 +4,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useWalletContext } from "@/context/WalletContext";
 
-
-
 const SummaryCard = () => {
   const { summary, loading } = useWalletContext();
 
@@ -37,7 +35,7 @@ const SummaryCard = () => {
             Total Balance
           </Text>
           <Text className="text-4xl font-extrabold text-white mt-1 tracking-wide">
-             {summary.balance.toLocaleString()}
+            {summary.balance.toLocaleString()}
           </Text>
         </View>
 
@@ -45,23 +43,30 @@ const SummaryCard = () => {
         <View className="flex-row justify-between">
           <View className="flex-1 items-center border-r border-white/20">
             <Text className="text-white/80 text-md font-medium mb-1">
-              Income
+              Needs Balance
             </Text>
-            {/* <Text className="text-green-300 text-xl font-bold">
-               {summary.walletBalance.toLocaleString()}
-            </Text> */}
+            <Text className="text-green-300 text-xl font-bold">
+              {summary.needsBalance.toLocaleString()}
+            </Text>
+          </View>
+          <View className="flex-1 items-center border-r border-white/20">
+            <Text className="text-white/80 text-md font-medium mb-1">
+              Wants Balance
+            </Text>
+            <Text className="text-green-300 text-xl font-bold">
+              {summary.wantsBalance.toLocaleString()}
+            </Text>
+          </View>
+          <View className="flex-1 items-center border-r border-white/20">
+            <Text className="text-white/80 text-md font-medium mb-1">
+              Savings Balance
+            </Text>
+            <Text className="text-green-300 text-xl font-bold">
+              {summary.savingsBalance.toLocaleString()}
+            </Text>
           </View>
 
-           <View className="flex-1 items-center border-r border-white/20">
-            <Text className="text-white/80 text-md font-medium mb-1">
-              Expenses
-            </Text>
-            {/* <Text className="text-red-300 text-xl font-bold">
-              {summary.expenses < 0
-                ? Math.abs(summary.expenses)
-                : summary.expenses}
-            </Text> */}
-          </View>
+          
         </View>
       </LinearGradient>
     </View>

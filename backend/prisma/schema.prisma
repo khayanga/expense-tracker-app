@@ -1,13 +1,10 @@
 generator client {
- provider = "prisma-client-js" 
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" 
-  
-  
+  provider = "postgresql"
 }
-
 
 enum WalletTransactionType {
   topup
@@ -17,9 +14,8 @@ enum WalletTransactionType {
 }
 
 enum WalletDirection {
-  credit   
-  debit 
-
+  credit
+  debit
 }
 
 enum PaymentStatus {
@@ -28,40 +24,41 @@ enum PaymentStatus {
   failed
   reversed
 }
+
 enum BudgetBucket {
   needs
   wants
   savings
 }
 
-
 model Wallet {
-  id           Int                 @id @default(autoincrement())
-  user_id      String              @unique @db.VarChar(255)
-  balance      Decimal             @default(0.00) @db.Decimal(10, 2)
+  id              Int                 @id @default(autoincrement())
+  user_id         String              @unique @db.VarChar(255)
+  balance         Decimal             @default(0.00) @db.Decimal(10, 2)
   needs_balance   Decimal             @default(0.00) @db.Decimal(10, 2)
   wants_balance   Decimal             @default(0.00) @db.Decimal(10, 2)
   savings_balance Decimal             @default(0.00) @db.Decimal(10, 2)
-  created_at   DateTime            @default(now())
-  updated_at   DateTime            @updatedAt
-  transactions WalletTransaction[]
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+  transactions    WalletTransaction[]
 }
 
 model WalletTransaction {
-  id         Int                    @id @default(autoincrement())
+  id         Int                   @id @default(autoincrement())
   wallet_id  Int
-  user_id    String                 @db.VarChar(255)
-  amount     Decimal                @db.Decimal(10, 2)
+  user_id    String                @db.VarChar(255)
+  amount     Decimal               @db.Decimal(10, 2)
   type       WalletTransactionType
   direction  WalletDirection
-   bucket     BudgetBucket?
-  category   String?                @db.VarChar(255) 
-  reference  String?                @db.VarChar(255)
-  method     String?                @default("mpesa") 
-  status     PaymentStatus          @default(pending)
-  created_at DateTime               @default(now())
-  updated_at DateTime               @updatedAt
-  wallet     Wallet                 @relation(fields: [wallet_id], references: [id])
+  bucket     BudgetBucket?
+  title      String?               @db.VarChar(255)
+  category   String?               @db.VarChar(255)
+  reference  String?               @db.VarChar(255)
+  method     String?               @default("mpesa")
+  status     PaymentStatus         @default(pending)
+  created_at DateTime              @default(now())
+  updated_at DateTime              @updatedAt
+  wallet     Wallet                @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id])
   @@index([user_id])
@@ -70,15 +67,15 @@ model WalletTransaction {
 }
 
 model Payment {
-  id            Int            @id @default(autoincrement())
-  user_id       String         @db.VarChar(255)
-  amount        Decimal        @db.Decimal(10, 2)
+  id            Int           @id @default(autoincrement())
+  user_id       String        @db.VarChar(255)
+  amount        Decimal       @db.Decimal(10, 2)
   type          String
   paybill       String?
   accountNumber String?
-  status        PaymentStatus  @default(pending)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
+  status        PaymentStatus @default(pending)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
 }
 
 model UserRatio {
@@ -89,6 +86,4 @@ model UserRatio {
   savings_percent Int
   created_at      DateTime? @default(now())
   updated_at      DateTime  @updatedAt
-
-  
 }

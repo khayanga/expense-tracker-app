@@ -1,9 +1,26 @@
 import db from "../../lib/prisma.js";
 import * as repository from "./wallet.repository.js";
 
-/**
- * Fetch transactions
- */
+const NEEDS_CATEGORIES = [
+  "food & drinks",
+  "transportation",
+  "bills",
+  "health",
+  "housing",
+  "utilities",
+  "groceries",
+  "clothing",
+  "education",
+];
+
+const WANTS_CATEGORIES = [
+  "shopping",
+  "entertainment",
+  "other",
+  "travel",
+  "dining out",
+  "subscriptions",
+];
 export const fetchTransactions = async (userId) => {
   return repository.getWalletTransactionsByUser(userId);
 };
@@ -22,15 +39,14 @@ export const applyRatioAllocation = async (walletTxId) => {
   const walletTx = await db.walletTransaction.findUnique({
     where: { id: walletTxId },
   });
-
   if (!walletTx) throw new Error("Wallet transaction not found");
 
-  const amount = Number(walletTx.amount); 
+  // Safety: only allocate for successful top-ups
+  if (walletTx.type !== "topup" || walletTx.status !== "completed") {
+    return;
+  }
 
-  const wallet = await db.wallet.findUnique({
-    where: { id: walletTx.wallet_id },
-  });
-  if (!wallet) throw new Error("Wallet not found");
+  const amount = Number(walletTx.amount);
 
   const ratio = await db.userRatio.findUnique({
     where: { user_id: walletTx.user_id },
@@ -41,100 +57,82 @@ export const applyRatioAllocation = async (walletTxId) => {
   const wants = (amount * ratio.wants_percent) / 100;
   const savings = (amount * ratio.savings_percent) / 100;
 
-  await db.$transaction([
-    db.wallet.update({
-      where: { id: wallet.id },
-      data: {
-        needs_balance: { increment: needs },
-        wants_balance: { increment: wants },
-        savings_balance: { increment: savings },
-      },
-    }),
-    db.walletTransaction.createMany({
-      data: [
-        {
-          wallet_id: wallet.id,
-          user_id: walletTx.user_id,
-          amount: needs,
-          type: "allocation",
-          direction: "credit",
-          bucket: "needs",
-          reference: walletTx.reference,
-          status: "completed",
-        },
-        {
-          wallet_id: wallet.id,
-          user_id: walletTx.user_id,
-          amount: wants,
-          type: "allocation",
-          direction: "credit",
-          bucket: "wants",
-          reference: walletTx.reference,
-          status: "completed",
-        },
-        {
-          wallet_id: wallet.id,
-          user_id: walletTx.user_id,
-          amount: savings,
-          type: "allocation",
-          direction: "credit",
-          bucket: "savings",
-          reference: walletTx.reference,
-          status: "completed",
-        },
-      ],
-    }),
-  ]);
+  await db.wallet.update({
+    where: { id: walletTx.wallet_id },
+    data: {
+      needs_balance: { increment: needs },
+      wants_balance: { increment: wants },
+      savings_balance: { increment: savings },
+    },
+  });
 };
 
 
 
 
-export const createExpense = async ({ user_id, amount, category, bucket }) => {
+export const createExpense = async ({ user_id, amount, category, bucket,title }) => {
+  if (!bucket) {
+    throw new Error("Bucket is required");
+  }
+
+  if (bucket === "savings") {
+    throw new Error("Savings is locked and cannot be spent");
+  }
+
   const wallet = await db.wallet.findUnique({ where: { user_id } });
   if (!wallet) throw new Error("Wallet not found");
 
-  
-  let expenseBucket = bucket;
-  if (!expenseBucket) {
-    const needsCategories = ["food", "rent", "utilities", "clothing"];
-    const wantsCategories = ["entertainment", "shopping", "subscriptions"];
-    if (needsCategories.includes(category.toLowerCase())) expenseBucket = "needs";
-    else expenseBucket = "wants";
+  const normalizedCategory = category.toLowerCase();
+
+  if (
+    bucket === "needs" &&
+    !NEEDS_CATEGORIES.includes(normalizedCategory)
+  ) {
+    throw new Error("Invalid category for Needs bucket");
   }
 
-  
-  const bucketBalance = expenseBucket === "needs" ? wallet.needs_balance : wallet.wants_balance;
+  if (
+    bucket === "wants" &&
+    !WANTS_CATEGORIES.includes(normalizedCategory)
+  ) {
+    throw new Error("Invalid category for Wants bucket");
+  }
+
+  const bucketBalance =
+    bucket === "needs"
+      ? wallet.needs_balance
+      : wallet.wants_balance;
+
   if (Number(amount) > Number(bucketBalance)) {
-    throw new Error(`Insufficient ${expenseBucket} balance`);
+    throw new Error(`Insufficient ${bucket} balance`);
   }
 
-  let expenseTx;
-  await db.$transaction(async (tx) => {
-  
+  return await db.$transaction(async (tx) => {
     await tx.wallet.update({
       where: { id: wallet.id },
       data: {
         balance: { decrement: Number(amount) },
-        needs_balance: expenseBucket === "needs" ? { decrement: Number(amount) } : undefined,
-        wants_balance: expenseBucket === "wants" ? { decrement: Number(amount) } : undefined,
+        ...(bucket === "needs" && {
+          needs_balance: { decrement: Number(amount) },
+        }),
+        ...(bucket === "wants" && {
+          wants_balance: { decrement: Number(amount) },
+        }),
       },
     });
 
-    
-    expenseTx = await tx.walletTransaction.create({
+    return await tx.walletTransaction.create({
       data: {
         wallet_id: wallet.id,
         user_id,
         amount: Number(amount),
         type: "expense",
         direction: "debit",
-        bucket: expenseBucket,
+        bucket,
+        title,
         category,
         status: "completed",
       },
     });
   });
-
-  return expenseTx;
 };
