@@ -17,7 +17,7 @@ type WalletContextType = {
   error: string | null;
   loadData: () => Promise<void>;
   deleteTransaction: (id: number) => Promise<void>;
-  createExpense: (data: { amount: number; category: string; bucket?: "needs" | "wants" }) => Promise<void>;
+  createExpense: (data: { amount: number; category: string; bucket?: "needs" | "wants", title: string }) => Promise<void>;
 };
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);

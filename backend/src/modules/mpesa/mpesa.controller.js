@@ -69,6 +69,8 @@ export const initiateTopUp = async (req, res) => {
         status: "pending",
         reference: checkoutRequestId,
         method: "mpesa",
+        title: "Wallet Top Up",
+        category: "Income",
       },
     });
 

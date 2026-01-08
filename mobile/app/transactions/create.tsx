@@ -47,7 +47,7 @@ const CreateTransaction = () => {
   const [showMpesaModal, setShowMpesaModal] = useState(false);
   const { createExpense, loading } = useWalletContext();
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<"income" | "expense" | "">("");
+  const [type, setType] = useState<"income" | "expense" | "">("expense");
   const [bucket, setBucket] = useState<"needs" | "wants">("needs");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<TransactionCategory | "">("");
@@ -124,7 +124,7 @@ const CreateTransaction = () => {
             </Text>
           </View>
 
-          {/* Type Selection */}
+          
           <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
             <Text className="text-lg font-semibold text-coffee-text mb-4">
               Select Type
@@ -164,94 +164,95 @@ const CreateTransaction = () => {
           </View>
 
           {type === "expense" && (
-            <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
-              <Text className="text-lg font-semibold text-coffee-text mb-4">
-                Select Bucket
-              </Text>
+            <>
+              <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
+                <Text className="text-lg font-semibold text-coffee-text mb-4">
+                  Select Bucket
+                </Text>
 
-              <View className="flex-row justify-between">
-                {[
-                  { label: "Needs", value: "needs" },
-                  { label: "Wants", value: "wants" },
-                ].map((b) => {
-                  const isActive = bucket === b.value;
-                  return (
-                    <TouchableOpacity
-                      key={b.value}
-                      onPress={() => setBucket(b.value as "needs" | "wants")}
-                      className={`flex-1 mx-1 py-4 rounded-xl border ${
-                        isActive
-                          ? "bg-[#8B5E3C] border-[#8B5E3C]"
-                          : "bg-white border-[#E6C9A8]"
-                      }`}
-                    >
-                      <Text
-                        className={`text-center text-base font-semibold ${
-                          isActive ? "text-white" : "text-[#8B5E3C]"
+                <View className="flex-row justify-between">
+                  {[
+                    { label: "Needs", value: "needs" },
+                    { label: "Wants", value: "wants" },
+                  ].map((b) => {
+                    const isActive = bucket === b.value;
+                    return (
+                      <TouchableOpacity
+                        key={b.value}
+                        onPress={() => setBucket(b.value as "needs" | "wants")}
+                        className={`flex-1 mx-1 py-4 rounded-xl border ${
+                          isActive
+                            ? "bg-[#8B5E3C] border-[#8B5E3C]"
+                            : "bg-white border-[#E6C9A8]"
                         }`}
                       >
-                        {b.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                        <Text
+                          className={`text-center text-base font-semibold ${
+                            isActive ? "text-white" : "text-[#8B5E3C]"
+                          }`}
+                        >
+                          {b.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
-            </View>
+              <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
+                <Text className="text-lg font-semibold text-coffee-text mb-4">
+                  Select Category
+                </Text>
+                <View className="flex-row flex-wrap  gap-3">
+                  {categoryOptions.map((cat) => {
+                    const isSelected = category === cat;
+                    return (
+                      <TouchableOpacity
+                        key={cat}
+                        onPress={() => setCategory(cat)}
+                        className={`flex-row items-center px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-coffee-primary border-[#C19A6B]"
+                            : "border-[#E6C9A8] bg-white"
+                        }`}
+                      >
+                        <Ionicons
+                          name={categoryIcons[cat]}
+                          size={16}
+                          color={isSelected ? "#fff" : "#8B5E3C"}
+                        />
+                        <Text
+                          className={`ml-2 text-sm font-medium ${
+                            isSelected ? "text-white" : "text-[#8B5E3C]"
+                          }`}
+                        >
+                          {cat}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </>
           )}
 
-          
-          <View className="bg-coffee-white rounded-2xl p-5 mb-5 shadow-sm">
-            <Text className="text-lg font-semibold text-coffee-text mb-4">
-              Select Category
-            </Text>
-            <View className="flex-row flex-wrap  gap-3">
-              {categoryOptions.map((cat) => {
-                const isSelected = category === cat;
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    onPress={() => setCategory(cat)}
-                    className={`flex-row items-center px-4 py-2 rounded-full border ${
-                      isSelected
-                        ? "bg-coffee-primary border-[#C19A6B]"
-                        : "border-[#E6C9A8] bg-white"
-                    }`}
-                  >
-                    <Ionicons
-                      name={categoryIcons[cat]}
-                      size={16}
-                      color={isSelected ? "#fff" : "#8B5E3C"}
-                    />
-                    <Text
-                      className={`ml-2 text-sm font-medium ${
-                        isSelected ? "text-white" : "text-[#8B5E3C]"
-                      }`}
-                    >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          
           <View className="bg-coffee-white rounded-2xl p-5 mb-6 shadow-sm">
-            <Input
-              label="Title"
-              placeholder="e.g. Lunch with friends"
-              value={title}
-              onChangeText={setTitle}
-            />
-
             {type === "expense" && (
-              <Input
-                label="Amount"
-                placeholder="e.g. 1200"
-                value={amount}
-                onChangeText={setAmount}
-                keyBoardType="numeric"
-              />
+              <>
+                <Input
+                  label="Title"
+                  placeholder="e.g. Lunch with friends"
+                  value={title}
+                  onChangeText={setTitle}
+                />
+
+                <Input
+                  label="Amount"
+                  placeholder="e.g. 1200"
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyBoardType="numeric"
+                />
+              </>
             )}
 
             {type === "income" && (
@@ -266,7 +267,6 @@ const CreateTransaction = () => {
             )}
           </View>
 
-          
           {type === "expense" && (
             <TouchableOpacity
               disabled={loading}
@@ -284,7 +284,7 @@ const CreateTransaction = () => {
           <Toast />
         </KeyboardAwareScrollView>
 
-        {/* M-PESA MODAL */}
+        
         <MpesaTopUpModal
           visible={showMpesaModal}
           onClose={() => setShowMpesaModal(false)}

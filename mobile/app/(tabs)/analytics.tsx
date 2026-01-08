@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { PieChart } from "react-native-chart-kit";
-import { useTransactionContext } from "@/context/WalletContext";
+import { useWalletContext } from "@/context/WalletContext";
 import TransactionList from "@/components/TransactionList";
 import EmptyState from "@/components/EmptyState";
 import { Link, router } from "expo-router";
@@ -28,7 +28,7 @@ const COLORS = [
 
 const WalletScreen = () => {
   const { transactions, summary, loading, deleteTransaction } =
-    useTransactionContext();
+    useWalletContext();
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
 
   
@@ -114,13 +114,13 @@ const WalletScreen = () => {
       <View className="flex-row justify-between mb-6">
         <SummaryCard
           label="Income"
-          value={summary.income}
+          value={summary.wantsBalance}
           color="#2ecc71"
           icon="arrow-up-circle"
         />
         <SummaryCard
           label="Expenses"
-          value={summary.expenses}
+          value={summary.needsBalance}
           color="#e74c3c"
           icon="arrow-down-circle"
         />

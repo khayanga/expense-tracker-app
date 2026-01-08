@@ -33,7 +33,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   onDelete,
 }) => {
   const isIncome = item.type === "topup";
-  const iconName = CATEGORY_ICONS[item.category] || "pricetag-outline";
+  const iconName = CATEGORY_ICONS[item.category] || "cash";
   const displayAmount = isIncome ? item.amount : -Math.abs(item.amount);
   const handlePress = () => {
     if (isIncome) {
