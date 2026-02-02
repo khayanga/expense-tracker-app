@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useAllocations } from "@/hooks/useAllocations";
 import { AllocationsCard } from "@/components/AllocationsCard";
-import PageLoader from "@/components/PageLoader";
+
 import { useUser } from "@clerk/clerk-expo";
 import { useRatio } from "@/hooks/useRatio";
 import { useEffect, useState } from "react";
@@ -19,7 +19,7 @@ import { UserRatioCard } from "@/components/userRatioCard";
 import Input from "@/components/Input";
 
 export default function TransactionAllocationsScreen() {
-  const { id, title } = useLocalSearchParams();
+ 
   const { user } = useUser();
   const user_id = user?.id as string;
 
@@ -27,8 +27,8 @@ export default function TransactionAllocationsScreen() {
   const [wantsPercent, setWantsPercent] = useState("");
   const [savingsPercent, setSavingsPercent] = useState("");
 
-  const { ratio, updateRatio, createRatio, loading } = useRatio(user_id);
-  const { allocations, fetchAllocations } = useAllocations(Number(id));
+  const { ratio, updateRatio, createRatio } = useRatio(user_id);
+  
 
   useEffect(() => {
     if (ratio) {
@@ -48,7 +48,7 @@ export default function TransactionAllocationsScreen() {
       needs_percent: Number(needsPercent),
       wants_percent: Number(wantsPercent),
       savings_percent: Number(savingsPercent),
-      transactionId: Number(id),
+      
     };
 
     if (ratio === null) {
@@ -57,10 +57,10 @@ export default function TransactionAllocationsScreen() {
       await updateRatio(payload);
     }
 
-    await fetchAllocations();
+    Alert.alert("Success", "Ratio saved successfully");
   };
 
-  if (loading) return <PageLoader />;
+  
 
   return (
     <KeyboardAvoidingView
@@ -145,9 +145,7 @@ export default function TransactionAllocationsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View className="mt-6">
-          <AllocationsCard title={title as string} allocations={allocations} />
-        </View>
+       
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -26,44 +26,50 @@ enum PaymentStatus {
 }
 
 enum BudgetBucket {
-  needs
-  wants
+  farm_inputs
+  farm_labor
+  farm_operations
+  livestock_feed
+  livestock_health
+  household
   savings
 }
 
 model Wallet {
-  id              Int                 @id @default(autoincrement())
-  user_id         String              @unique @db.VarChar(255)
-  balance         Decimal             @default(0.00) @db.Decimal(10, 2)
-  needs_balance   Decimal             @default(0.00) @db.Decimal(10, 2)
-  wants_balance   Decimal             @default(0.00) @db.Decimal(10, 2)
-  savings_balance Decimal             @default(0.00) @db.Decimal(10, 2)
-  created_at      DateTime            @default(now())
-  updated_at      DateTime            @updatedAt
-  transactions    WalletTransaction[]
+  id         Int      @id @default(autoincrement())
+  user_id    String   @unique @db.VarChar(255)
+  balance    Decimal  @default(0.00) @db.Decimal(10, 2)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  transactions WalletTransaction[]
 }
 
 model WalletTransaction {
-  id         Int                   @id @default(autoincrement())
-  wallet_id  Int
-  user_id    String                @db.VarChar(255)
-  amount     Decimal               @db.Decimal(10, 2)
-  type       WalletTransactionType
-  direction  WalletDirection
-  bucket     BudgetBucket?
-  title      String?               @db.VarChar(255)
-  category   String?               @db.VarChar(255)
-  reference  String?               @db.VarChar(255)
-  method     String?               @default("mpesa")
-  status     PaymentStatus         @default(pending)
-  created_at DateTime              @default(now())
-  updated_at DateTime              @updatedAt
-  wallet     Wallet                @relation(fields: [wallet_id], references: [id])
+  id        Int                   @id @default(autoincrement())
+  wallet_id Int
+  user_id   String                @db.VarChar(255)
+  amount    Decimal               @db.Decimal(10, 2)
+  type      WalletTransactionType
+  direction WalletDirection
+  bucket    BudgetBucket?
+  title     String?               @db.VarChar(255)
+  category  String?               @db.VarChar(255)
+  cycle_id Int?
+  stage_id Int?
+  reference  String?       @db.VarChar(255)
+  method     String?       @default("mpesa")
+  status     PaymentStatus @default(pending)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+  wallet Wallet           @relation(fields: [wallet_id], references: [id])
+  cycle  ProductionCycle? @relation(fields: [cycle_id], references: [id])
+  stage  ProductionStage? @relation(fields: [stage_id], references: [id])
 
   @@index([wallet_id])
   @@index([user_id])
-  @@index([type])
-  @@index([bucket])
+  @@index([cycle_id])
+  @@index([stage_id])
 }
 
 model Payment {
@@ -76,14 +82,83 @@ model Payment {
   status        PaymentStatus @default(pending)
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
+
+  @@index([user_id])
 }
 
-model UserRatio {
+model FarmProfile {
+  id            Int      @id @default(autoincrement())
+  user_id       String   @unique @db.VarChar(255)
+  farm_name     String  @db.VarChar(255)
+  farm_type     String // crop, livestock, mixed
+  main_activity String // maize, dairy, poultry, etc
+  farm_size     Float?  // in acres or hectares
+  location      String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  productionCycles ProductionCycle[]
+}
+
+model ProductionCycle {
   id              Int       @id @default(autoincrement())
-  user_id         String    @unique @db.VarChar(255)
-  needs_percent   Int
-  wants_percent   Int
-  savings_percent Int
-  created_at      DateTime? @default(now())
+  user_id         String    @db.VarChar(255)
+  farm_profile_id Int
+  name            String    @db.VarChar(255)
+  cycle_type      String // e.g., planting, breeding
+  start_date      DateTime
+  expected_end    DateTime?
+  expected_income Decimal?  @db.Decimal(10, 2)
+  status          String    @default("active")
+  created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
+  farmProfile  FarmProfile         @relation(fields: [farm_profile_id], references: [id])
+  stages       ProductionStage[]
+  incomes      FarmIncome[]
+  transactions WalletTransaction[]
+
+  @@index([user_id])
+  @@index([farm_profile_id])
+}
+
+model ProductionStage {
+  id           Int       @id @default(autoincrement())
+  cycle_id     Int
+  name         String // Planting, Fertilizing, Harvest OR Feeding, Vaccination
+  category     String // input, labor, maintenance, health, feed
+  planned_cost Decimal   @db.Decimal(10, 2)
+  actual_cost  Decimal   @default(0.00) @db.Decimal(10, 2)
+  due_date     DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  cycle        ProductionCycle     @relation(fields: [cycle_id], references: [id])
+  transactions WalletTransaction[]
+
+  @@index([cycle_id])
+}
+
+model FarmIncome {
+  id              Int       @id @default(autoincrement())
+  cycle_id        Int
+  source          String    @db.VarChar(255) // e.g., crop sales, livestock sales
+  expected_amount Decimal?  @db.Decimal(10, 2)
+  actual_amount   Decimal?  @db.Decimal(10, 2)
+  sale_date       DateTime?
+  buyer           String?
+  created_at      DateTime  @default(now())
+
+  cycle ProductionCycle @relation(fields: [cycle_id], references: [id])
+
+  @@index([cycle_id])
+}
+
+model SavingsAccount {
+  id              Int      @id @default(autoincrement())
+  user_id         String   @unique @db.VarChar(255)
+  principal       Decimal  @default(0.00) @db.Decimal(10, 2)
+  earnings        Decimal  @default(0.00) @db.Decimal(10, 2)
+  last_accrual_at DateTime @default(now())
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }

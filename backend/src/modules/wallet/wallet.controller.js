@@ -43,6 +43,8 @@ export const getWalletSummary = async (req, res) => {
         needsBalance: wallet.needs_balance,
         wantsBalance: wallet.wants_balance,
         savingsBalance: wallet.savings_balance,
+        savingsPrincipal: wallet.savings_principal,
+        savingsReturns: wallet.savings_earnings,
       },
     });
   } catch (error) {

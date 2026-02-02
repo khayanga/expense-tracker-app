@@ -2,6 +2,7 @@ import express from 'express';
 import ratioRoutes from './modules/ratio/ratio.route.js';
 import mpesaRoutes from './modules/mpesa/mpesa.route.js';
 import walletRoutes from './modules/wallet/wallet.route.js';
+import farmProfileRoutes from './modules/farm-profile/farmProfile.routes.js';
 
 import dotenv from 'dotenv';
 import rateLimiter from '../middleware/rateLimiter.js';
@@ -18,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 app.use("/api/wallet", walletRoutes);
 app.use("/api/ratio", ratioRoutes);
 app.use("/api/mpesa", mpesaRoutes);
+app.use("/api/farm-profile", farmProfileRoutes);
 
 
 app.get("/", (res)=>{

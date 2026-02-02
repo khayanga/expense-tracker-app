@@ -58,7 +58,7 @@ const SummaryCard = () => {
         {/* Total Balance */}
         <View className="mb-8">
           <Text className="text-white/80 text-base font-medium">
-            Total Balance
+            Total Net Worth
           </Text>
           <Text className="text-white text-4xl font-extrabold mt-2 tracking-wide">
             {formatKsh(summary.balance)}

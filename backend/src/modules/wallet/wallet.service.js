@@ -1,5 +1,6 @@
 import db from "../../lib/prisma.js";
 import * as repository from "./wallet.repository.js";
+import * as savingsService from "../savings/savings.serive.js";
 
 const NEEDS_CATEGORIES = [
   "food & drinks",
@@ -30,6 +31,7 @@ export const fetchTransactionById = async (id) => {
 };
 
 export const fetchWalletSummary = async (userId) => {
+  await savingsService.accrueSavingsGrowth(userId);
   return repository.getWalletSummaryByUser(userId);
 };
 
@@ -39,35 +41,61 @@ export const applyRatioAllocation = async (walletTxId) => {
   const walletTx = await db.walletTransaction.findUnique({
     where: { id: walletTxId },
   });
-  if (!walletTx) throw new Error("Wallet transaction not found");
 
-  // Safety: only allocate for successful top-ups
-  if (walletTx.type !== "topup" || walletTx.status !== "completed") {
-    return;
-  }
+  if (!walletTx) throw new Error("Wallet transaction not found");
+  if (walletTx.type !== "topup" || walletTx.status !== "completed") return;
 
   const amount = Number(walletTx.amount);
 
   const ratio = await db.userRatio.findUnique({
     where: { user_id: walletTx.user_id },
   });
+
   if (!ratio) throw new Error("User ratio not found");
 
   const needs = (amount * ratio.needs_percent) / 100;
   const wants = (amount * ratio.wants_percent) / 100;
   const savings = (amount * ratio.savings_percent) / 100;
 
-  await db.wallet.update({
-    where: { id: walletTx.wallet_id },
-    data: {
-      needs_balance: { increment: needs },
-      wants_balance: { increment: wants },
-      savings_balance: { increment: savings },
-    },
+  await db.$transaction(async (tx) => {
+    // Update wallet buckets
+    await tx.wallet.update({
+      where: { id: walletTx.wallet_id },
+      data: {
+        needs_balance: { increment: needs },
+        wants_balance: { increment: wants },
+        savings_balance: { increment: savings },
+      },
+    });
+
+    
+    await tx.savingsAccount.upsert({
+      where: { user_id: walletTx.user_id },
+      update: {
+        principal: { increment: savings },
+      },
+      create: {
+        user_id: walletTx.user_id,
+        principal: savings,
+      },
+    });
+
+    
+    await tx.walletTransaction.create({
+      data: {
+        wallet_id: walletTx.wallet_id,
+        user_id: walletTx.user_id,
+        amount: savings,
+        type: "allocation",
+        direction: "credit",
+        bucket: "savings",
+        title: "Auto-invested savings",
+        category: "investment",
+        status: "completed",
+      },
+    });
   });
 };
-
-
 
 
 export const createExpense = async ({ user_id, amount, category, bucket,title }) => {
@@ -136,3 +164,5 @@ export const createExpense = async ({ user_id, amount, category, bucket,title })
     });
   });
 };
+
+
