@@ -1,5 +1,5 @@
 import { createFarmProfileSchema } from "./farmProfile.validation.js";
-import * as service from "./farmProfle.service.js";
+import * as service from "./farmProfile.service.js";
 export const createFarmProfile = async(req,res) =>{
     try {
         const{error,value} = createFarmProfileSchema.validate(req.body);

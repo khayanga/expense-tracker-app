@@ -35,6 +35,13 @@ enum BudgetBucket {
   savings
 }
 
+enum ProductionCycleStatus {
+  active
+  completed
+  paused
+  cancelled
+}
+
 model Wallet {
   id         Int      @id @default(autoincrement())
   user_id    String   @unique @db.VarChar(255)
@@ -46,25 +53,25 @@ model Wallet {
 }
 
 model WalletTransaction {
-  id        Int                   @id @default(autoincrement())
-  wallet_id Int
-  user_id   String                @db.VarChar(255)
-  amount    Decimal               @db.Decimal(10, 2)
-  type      WalletTransactionType
-  direction WalletDirection
-  bucket    BudgetBucket?
-  title     String?               @db.VarChar(255)
-  category  String?               @db.VarChar(255)
-  cycle_id Int?
-  stage_id Int?
-  reference  String?       @db.VarChar(255)
-  method     String?       @default("mpesa")
-  status     PaymentStatus @default(pending)
-  created_at DateTime      @default(now())
-  updated_at DateTime      @updatedAt
-  wallet Wallet           @relation(fields: [wallet_id], references: [id])
-  cycle  ProductionCycle? @relation(fields: [cycle_id], references: [id])
-  stage  ProductionStage? @relation(fields: [stage_id], references: [id])
+  id         Int                   @id @default(autoincrement())
+  wallet_id  Int
+  user_id    String                @db.VarChar(255)
+  amount     Decimal               @db.Decimal(10, 2)
+  type       WalletTransactionType
+  direction  WalletDirection
+  bucket     BudgetBucket?
+  title      String?               @db.VarChar(255)
+  category   String?               @db.VarChar(255)
+  cycle_id   Int?
+  stage_id   Int?
+  reference  String?               @db.VarChar(255)
+  method     String?               @default("mpesa")
+  status     PaymentStatus         @default(pending)
+  created_at DateTime              @default(now())
+  updated_at DateTime              @updatedAt
+  wallet     Wallet                @relation(fields: [wallet_id], references: [id])
+  cycle      ProductionCycle?      @relation(fields: [cycle_id], references: [id])
+  stage      ProductionStage?      @relation(fields: [stage_id], references: [id])
 
   @@index([wallet_id])
   @@index([user_id])
@@ -89,10 +96,10 @@ model Payment {
 model FarmProfile {
   id            Int      @id @default(autoincrement())
   user_id       String   @unique @db.VarChar(255)
-  farm_name     String  @db.VarChar(255)
+  farm_name     String   @db.VarChar(255)
   farm_type     String // crop, livestock, mixed
   main_activity String // maize, dairy, poultry, etc
-  farm_size     Float?  // in acres or hectares
+  farm_size     Float? // in acres or hectares
   location      String?
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
@@ -101,21 +108,21 @@ model FarmProfile {
 }
 
 model ProductionCycle {
-  id              Int       @id @default(autoincrement())
-  user_id         String    @db.VarChar(255)
+  id              Int                   @id @default(autoincrement())
+  user_id         String                @db.VarChar(255)
   farm_profile_id Int
-  name            String    @db.VarChar(255)
+  name            String                @db.VarChar(255)
   cycle_type      String // e.g., planting, breeding
   start_date      DateTime
   expected_end    DateTime?
-  expected_income Decimal?  @db.Decimal(10, 2)
-  status          String    @default("active")
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  farmProfile  FarmProfile         @relation(fields: [farm_profile_id], references: [id])
-  stages       ProductionStage[]
-  incomes      FarmIncome[]
-  transactions WalletTransaction[]
+  expected_income Decimal?              @db.Decimal(10, 2)
+  status          ProductionCycleStatus @default(active)
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  farmProfile     FarmProfile           @relation(fields: [farm_profile_id], references: [id])
+  stages          ProductionStage[]
+  incomes         FarmIncome[]
+  transactions    WalletTransaction[]
 
   @@index([user_id])
   @@index([farm_profile_id])
