@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getMpesaToken } from "../../lib/utils/mpesa.js";
 import db from "../../lib/prisma.js";
-import { applyRatioAllocation } from "../wallet/wallet.service.js";
+// import { applyRatioAllocation } from "../wallet/wallet.service.js";
 
 export const initiateTopUp = async (req, res) => {
   try {

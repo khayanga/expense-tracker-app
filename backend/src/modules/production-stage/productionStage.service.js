@@ -60,22 +60,52 @@ export const updateStage = async (stageId, data) => {
 };
 
 export const logExpense = async (stageId, amount) => {
-  const existingStage = await getStageById(stageId);
-  if (!existingStage) {
-    throw new Error("Production stage not found");
-  }
-
-  const newActualCost =
-    parseFloat(existingStage.actual_cost) + parseFloat(amount);
-
-  const updatedStage = await db.productionStage.update({
+  
+  const stage = await db.productionStage.findUnique({
     where: { id: stageId },
-    data: {
-      actual_cost: newActualCost,
-    },
+    include: { cycle: true }
   });
-  return updatedStage;
+
+  if (!stage) throw new Error("Production stage not found");
+  if (stage.status === "completed") throw new Error("Cannot log expenses");
+
+  const userId = stage.cycle.user_id;
+
+  const wallet = await db.wallet.findUnique({
+    where: { user_id: userId },
+  });
+
+  if (!wallet) throw new Error("Wallet not found");
+  if (Number(wallet.balance) < amount) throw new Error("Insufficient wallet balance");
+
+  
+  return db.$transaction(async (tx) => {
+    await tx.wallet.update({
+      where: { user_id: userId },
+      data: { balance: { decrement: amount } }
+    });
+
+    await tx.walletTransaction.create({
+      data: {
+        wallet_id: wallet.id,
+        user_id: userId,
+        amount,
+        title: `Expense for production stage ${stage.name}`,
+        type: "expense",
+        direction: "debit",
+        category: "production_stage",
+        reference: `Stage-${stageId}`,
+        status: "completed"
+      }
+    });
+
+    return tx.productionStage.update({
+      where: { id: stageId },
+      data: { actual_cost: { increment: amount } },
+    });
+  });
 };
+
 
 export const completeStage = async (stageId) => {
   const existingStage = await getStageById(stageId);
