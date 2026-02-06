@@ -1,4 +1,5 @@
 import db from "../../lib/prisma.js";
+import { debitWallet } from "../wallet/wallet.service.js";
 
 export const createStage = async (cycleId, data) => {
   const cycle = await db.productionCycle.findUnique({
@@ -63,49 +64,69 @@ export const logExpense = async (stageId, amount) => {
   
   const stage = await db.productionStage.findUnique({
     where: { id: stageId },
-    include: { cycle: true }
+    include: { cycle: true },
   });
 
-  if (!stage) throw new Error("Production stage not found");
-  if (stage.status === "completed") throw new Error("Cannot log expenses");
+  if (!stage) throw new Error("Stage not found");
+
+  if (stage.status === "completed") {
+    throw new Error(`Cannot log expenses for a completed stage`);
+  }
 
   const userId = stage.cycle.user_id;
 
-  const wallet = await db.wallet.findUnique({
-    where: { user_id: userId },
-  });
-
-  if (!wallet) throw new Error("Wallet not found");
-  if (Number(wallet.balance) < amount) throw new Error("Insufficient wallet balance");
-
   
-  return db.$transaction(async (tx) => {
-    await tx.wallet.update({
-      where: { user_id: userId },
-      data: { balance: { decrement: amount } }
-    });
+  const newActualCost = Number(stage.actual_cost) + Number(amount);
 
-    await tx.walletTransaction.create({
-      data: {
-        wallet_id: wallet.id,
-        user_id: userId,
+  //  Short transaction for writes
+  const updatedStage = await db.$transaction(async (tx) => {
+    if (stage.actual_cost > 0) {
+      
+      await debitWallet(
+        userId,
         amount,
-        title: `Expense for production stage ${stage.name}`,
-        type: "expense",
-        direction: "debit",
-        category: "production_stage",
-        reference: `Stage-${stageId}`,
-        status: "completed"
-      }
-    });
+        {
+          title: `Update expense for production stage: ${stage.name}`,
+          category: "production_stage",
+          reference: `Stage-${stageId}`,
+          stage_id: stage.id,
+      cycle_id: stage.cycle_id,
+        },
+        tx,
+      );
+    } else {
+     
+      await debitWallet(
+        userId,
+        amount,
+        {
+          title: `Expense for production stage: ${stage.name}`,
+          category: "production_stage",
+          reference: `Stage-${stageId}`,
+          stage_id: stageId,
+          cycle_id: stage.cycle_id,
+        },
+        tx,
+      );
+    }
 
     return tx.productionStage.update({
       where: { id: stageId },
-      data: { actual_cost: { increment: amount } },
+      data: {
+        actual_cost: { increment: amount },
+      },
     });
   });
-};
 
+  if (newActualCost > Number(stage.planned_cost)) {
+    return {
+      warning: `Actual cost (${newActualCost}) exceeds planned cost (${stage.planned_cost})`,
+      stage: updatedStage,
+    };
+  }
+
+  return { stage: updatedStage };
+};
 
 export const completeStage = async (stageId) => {
   const existingStage = await getStageById(stageId);
