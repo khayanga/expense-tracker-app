@@ -56,30 +56,102 @@ export const debitWallet = async (userId, amount, metadata, tx = db) => {
 
 
 
-export const creditWallet = async (userId, amount, metadata, tx = db) => {
-  const wallet = await getWalletByUserId(userId, tx);
-
-  const updatedWallet = await tx.wallet.update({
+export const creditWallet = async (userId, amount, metadata, prisma = db) => {
+  
+  const wallet = await prisma.wallet.upsert({
     where: { user_id: userId },
-    data: {
-      balance: { increment: amount }
-    }
+    update: {},
+    create: { user_id: userId },
   });
 
-  await tx.walletTransaction.create({
+  
+  if (metadata.reference) {
+    const existingTx = await prisma.walletTransaction.findFirst({
+      where: { reference: metadata.reference, status: "completed" },
+    });
+
+    if (existingTx) {
+      return wallet.balance; 
+    }
+  }
+
+  
+  const [updatedWallet] = await prisma.$transaction([
+    prisma.wallet.update({
+      where: { id: wallet.id },
+      data: {
+        balance: { increment: amount },
+      },
+    }),
+
+    prisma.walletTransaction.create({
+      data: {
+        wallet_id: wallet.id,
+        user_id: userId,
+        amount,
+        type: "topup",
+        direction: "credit",
+        title: metadata.title || "Wallet Credit",
+        category: metadata.category || "income",
+        reference: metadata.reference || null,
+        method: metadata.method || "mpesa",
+        stage_id: metadata.stage_id || null,
+        cycle_id: metadata.cycle_id || null,
+        status: "completed",
+      },
+    }),
+  ]);
+
+  return updatedWallet.balance;
+};
+
+
+
+
+export const createPendingTopup = async (userId, amount, reference, phone) => {
+  const wallet = await db.wallet.upsert({
+    where: { user_id: userId },
+    update: {},
+    create: { user_id: userId },
+  });
+
+  return db.walletTransaction.create({
     data: {
       wallet_id: wallet.id,
       user_id: userId,
       amount,
       type: "topup",
       direction: "credit",
-      title: metadata.title,
-      category: metadata.category,
-      reference: metadata.reference,
-      status: "completed"
-    }
+      status: "pending",
+      reference,
+      method: "mpesa",
+      title: "M-Pesa Wallet Top Up",
+    },
   });
-
-  return updatedWallet.balance;
 };
+
+export const completeTopup = async (txId, stkData) => {
+  const metadata = stkData.CallbackMetadata?.Item || [];
+  const amount = metadata.find(i => i.Name === "Amount")?.Value;
+
+  return db.$transaction(async (tx) => {
+    const wtx = await tx.walletTransaction.update({
+      where: { id: txId },
+      data: { status: "completed" },
+    });
+
+    await tx.wallet.update({
+      where: { id: wtx.wallet_id },
+      data: { balance: { increment: Number(amount) } },
+    });
+  });
+};
+
+export const failTopup = async (txId) => {
+  return db.walletTransaction.update({
+    where: { id: txId },
+    data: { status: "failed" },
+  });
+};
+
 

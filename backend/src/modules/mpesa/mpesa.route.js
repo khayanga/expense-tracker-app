@@ -1,8 +1,8 @@
 import express from "express";
-import { initiateTopUp, mpesaCallback } from "./mpesa.controller.js";
+import { mpesaCallback, requestSTKPush } from "./mpesa.controller.js";
 const router = express.Router();
 
-router.post("/topup", initiateTopUp)
-router.post("/callback", mpesaCallback)
+router.post("/:user_id/stk", requestSTKPush);
+router.post("/callback", mpesaCallback);
 
 export default router;

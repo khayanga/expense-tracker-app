@@ -74,11 +74,7 @@ export const logExpense = async (stageId, amount) => {
   }
 
   const userId = stage.cycle.user_id;
-
-  
   const newActualCost = Number(stage.actual_cost) + Number(amount);
-
-  //  Short transaction for writes
   const updatedStage = await db.$transaction(async (tx) => {
     if (stage.actual_cost > 0) {
       
@@ -90,7 +86,7 @@ export const logExpense = async (stageId, amount) => {
           category: "production_stage",
           reference: `Stage-${stageId}`,
           stage_id: stage.id,
-      cycle_id: stage.cycle_id,
+          cycle_id: stage.cycle_id,
         },
         tx,
       );
